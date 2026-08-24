@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.agri.costtracker.data.model.ModelTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-23T11:14:06.452Z" hostname="DESKTOP-JHJO2V4" time="0.005">
+  <properties/>
+  <testcase name="farmerProfile_copy_updatesFields" classname="com.agri.costtracker.data.model.ModelTest" time="0.0"/>
+  <testcase name="farmerProfile_defaultValues_areCorrect" classname="com.agri.costtracker.data.model.ModelTest" time="0.0"/>
+  <testcase name="activityRecord_copy_updatesFieldsCorrectly" classname="com.agri.costtracker.data.model.ModelTest" time="0.001"/>
+  <testcase name="recordStatus_enum_containsAllValues" classname="com.agri.costtracker.data.model.ModelTest" time="0.004"/>
+  <testcase name="serviceRates_defaultValues_areCorrect" classname="com.agri.costtracker.data.model.ModelTest" time="0.0"/>
+  <testcase name="serviceRates_copy_updatesRates" classname="com.agri.costtracker.data.model.ModelTest" time="0.0"/>
+  <testcase name="activityRecord_defaultValues_areCorrect" classname="com.agri.costtracker.data.model.ModelTest" time="0.0"/>
+  <testcase name="recordCategory_enum_containsAllValues" classname="com.agri.costtracker.data.model.ModelTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

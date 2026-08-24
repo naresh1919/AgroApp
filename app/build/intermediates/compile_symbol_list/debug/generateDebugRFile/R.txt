@@ -1,0 +1,6 @@
+int string app_name 0x0
+int string title_dashboard 0x0
+int string title_history 0x0
+int string title_land 0x0
+int string title_rates 0x0
+int style Theme_AgriCostTracker 0x0

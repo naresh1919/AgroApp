@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.agri.costtracker.ui.viewmodel.AgriViewModelFactoryTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-08-23T11:14:06.473Z" hostname="DESKTOP-JHJO2V4" time="0.015">
+  <properties/>
+  <testcase name="create_unknownViewModel_throwsIllegalArgumentException" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelFactoryTest" time="0.001"/>
+  <testcase name="create_agriViewModel_returnsInstance" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelFactoryTest" time="0.013"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,570 @@
+package com.agri.costtracker.data.local;
+
+import android.database.Cursor;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.room.CoroutinesRoom;
+import androidx.room.EntityDeletionOrUpdateAdapter;
+import androidx.room.EntityInsertionAdapter;
+import androidx.room.RoomDatabase;
+import androidx.room.RoomSQLiteQuery;
+import androidx.room.SharedSQLiteStatement;
+import androidx.room.util.CursorUtil;
+import androidx.room.util.DBUtil;
+import androidx.sqlite.db.SupportSQLiteStatement;
+import com.agri.costtracker.data.model.ActivityRecord;
+import com.agri.costtracker.data.model.FarmerProfile;
+import com.agri.costtracker.data.model.RecordCategory;
+import com.agri.costtracker.data.model.RecordStatus;
+import com.agri.costtracker.data.model.ServiceRates;
+import java.lang.Class;
+import java.lang.Exception;
+import java.lang.IllegalArgumentException;
+import java.lang.Long;
+import java.lang.Object;
+import java.lang.Override;
+import java.lang.String;
+import java.lang.SuppressWarnings;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import javax.annotation.processing.Generated;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.flow.Flow;
+
+@Generated("androidx.room.RoomProcessor")
+@SuppressWarnings({"unchecked", "deprecation"})
+public final class AgriDao_Impl implements AgriDao {
+  private final RoomDatabase __db;
+
+  private final EntityInsertionAdapter<FarmerProfile> __insertionAdapterOfFarmerProfile;
+
+  private final EntityInsertionAdapter<ServiceRates> __insertionAdapterOfServiceRates;
+
+  private final EntityInsertionAdapter<ActivityRecord> __insertionAdapterOfActivityRecord;
+
+  private final EntityDeletionOrUpdateAdapter<ActivityRecord> __deletionAdapterOfActivityRecord;
+
+  private final SharedSQLiteStatement __preparedStmtOfClearAllRecords;
+
+  public AgriDao_Impl(@NonNull final RoomDatabase __db) {
+    this.__db = __db;
+    this.__insertionAdapterOfFarmerProfile = new EntityInsertionAdapter<FarmerProfile>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "INSERT OR REPLACE INTO `farmer_profile` (`id`,`fullName`,`totalOwnedAcres`,`cultivatedAcres`,`fallowAcres`,`sector`,`region`,`avatarUrl`) VALUES (?,?,?,?,?,?,?,?)";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final FarmerProfile entity) {
+        statement.bindLong(1, entity.getId());
+        statement.bindString(2, entity.getFullName());
+        statement.bindDouble(3, entity.getTotalOwnedAcres());
+        statement.bindDouble(4, entity.getCultivatedAcres());
+        statement.bindDouble(5, entity.getFallowAcres());
+        statement.bindString(6, entity.getSector());
+        statement.bindString(7, entity.getRegion());
+        statement.bindString(8, entity.getAvatarUrl());
+      }
+    };
+    this.__insertionAdapterOfServiceRates = new EntityInsertionAdapter<ServiceRates>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "INSERT OR REPLACE INTO `service_rates` (`id`,`sprayingRatePerAcre`,`cropCuttingRatePerAcre`,`globalTrendPercent`,`lastUpdated`) VALUES (?,?,?,?,?)";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final ServiceRates entity) {
+        statement.bindLong(1, entity.getId());
+        statement.bindDouble(2, entity.getSprayingRatePerAcre());
+        statement.bindDouble(3, entity.getCropCuttingRatePerAcre());
+        statement.bindDouble(4, entity.getGlobalTrendPercent());
+        statement.bindLong(5, entity.getLastUpdated());
+      }
+    };
+    this.__insertionAdapterOfActivityRecord = new EntityInsertionAdapter<ActivityRecord>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "INSERT OR REPLACE INTO `activity_records` (`id`,`title`,`date`,`location`,`cost`,`status`,`category`,`season`,`timestamp`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?)";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final ActivityRecord entity) {
+        statement.bindLong(1, entity.getId());
+        statement.bindString(2, entity.getTitle());
+        statement.bindString(3, entity.getDate());
+        statement.bindString(4, entity.getLocation());
+        statement.bindDouble(5, entity.getCost());
+        statement.bindString(6, __RecordStatus_enumToString(entity.getStatus()));
+        statement.bindString(7, __RecordCategory_enumToString(entity.getCategory()));
+        statement.bindString(8, entity.getSeason());
+        statement.bindLong(9, entity.getTimestamp());
+      }
+    };
+    this.__deletionAdapterOfActivityRecord = new EntityDeletionOrUpdateAdapter<ActivityRecord>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "DELETE FROM `activity_records` WHERE `id` = ?";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final ActivityRecord entity) {
+        statement.bindLong(1, entity.getId());
+      }
+    };
+    this.__preparedStmtOfClearAllRecords = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "DELETE FROM activity_records";
+        return _query;
+      }
+    };
+  }
+
+  @Override
+  public Object insertOrUpdateProfile(final FarmerProfile profile,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __insertionAdapterOfFarmerProfile.insert(profile);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object insertOrUpdateRates(final ServiceRates rates,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __insertionAdapterOfServiceRates.insert(rates);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object insertRecord(final ActivityRecord record,
+      final Continuation<? super Long> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
+      @Override
+      @NonNull
+      public Long call() throws Exception {
+        __db.beginTransaction();
+        try {
+          final Long _result = __insertionAdapterOfActivityRecord.insertAndReturnId(record);
+          __db.setTransactionSuccessful();
+          return _result;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object insertAllRecords(final List<ActivityRecord> records,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __insertionAdapterOfActivityRecord.insert(records);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object deleteRecord(final ActivityRecord record,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __deletionAdapterOfActivityRecord.handle(record);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object clearAllRecords(final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfClearAllRecords.acquire();
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfClearAllRecords.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Flow<FarmerProfile> getFarmerProfile() {
+    final String _sql = "SELECT * FROM farmer_profile WHERE id = 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"farmer_profile"}, new Callable<FarmerProfile>() {
+      @Override
+      @Nullable
+      public FarmerProfile call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfFullName = CursorUtil.getColumnIndexOrThrow(_cursor, "fullName");
+          final int _cursorIndexOfTotalOwnedAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "totalOwnedAcres");
+          final int _cursorIndexOfCultivatedAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "cultivatedAcres");
+          final int _cursorIndexOfFallowAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "fallowAcres");
+          final int _cursorIndexOfSector = CursorUtil.getColumnIndexOrThrow(_cursor, "sector");
+          final int _cursorIndexOfRegion = CursorUtil.getColumnIndexOrThrow(_cursor, "region");
+          final int _cursorIndexOfAvatarUrl = CursorUtil.getColumnIndexOrThrow(_cursor, "avatarUrl");
+          final FarmerProfile _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final String _tmpFullName;
+            _tmpFullName = _cursor.getString(_cursorIndexOfFullName);
+            final double _tmpTotalOwnedAcres;
+            _tmpTotalOwnedAcres = _cursor.getDouble(_cursorIndexOfTotalOwnedAcres);
+            final double _tmpCultivatedAcres;
+            _tmpCultivatedAcres = _cursor.getDouble(_cursorIndexOfCultivatedAcres);
+            final double _tmpFallowAcres;
+            _tmpFallowAcres = _cursor.getDouble(_cursorIndexOfFallowAcres);
+            final String _tmpSector;
+            _tmpSector = _cursor.getString(_cursorIndexOfSector);
+            final String _tmpRegion;
+            _tmpRegion = _cursor.getString(_cursorIndexOfRegion);
+            final String _tmpAvatarUrl;
+            _tmpAvatarUrl = _cursor.getString(_cursorIndexOfAvatarUrl);
+            _result = new FarmerProfile(_tmpId,_tmpFullName,_tmpTotalOwnedAcres,_tmpCultivatedAcres,_tmpFallowAcres,_tmpSector,_tmpRegion,_tmpAvatarUrl);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<ServiceRates> getServiceRates() {
+    final String _sql = "SELECT * FROM service_rates WHERE id = 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"service_rates"}, new Callable<ServiceRates>() {
+      @Override
+      @Nullable
+      public ServiceRates call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfSprayingRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "sprayingRatePerAcre");
+          final int _cursorIndexOfCropCuttingRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "cropCuttingRatePerAcre");
+          final int _cursorIndexOfGlobalTrendPercent = CursorUtil.getColumnIndexOrThrow(_cursor, "globalTrendPercent");
+          final int _cursorIndexOfLastUpdated = CursorUtil.getColumnIndexOrThrow(_cursor, "lastUpdated");
+          final ServiceRates _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final double _tmpSprayingRatePerAcre;
+            _tmpSprayingRatePerAcre = _cursor.getDouble(_cursorIndexOfSprayingRatePerAcre);
+            final double _tmpCropCuttingRatePerAcre;
+            _tmpCropCuttingRatePerAcre = _cursor.getDouble(_cursorIndexOfCropCuttingRatePerAcre);
+            final double _tmpGlobalTrendPercent;
+            _tmpGlobalTrendPercent = _cursor.getDouble(_cursorIndexOfGlobalTrendPercent);
+            final long _tmpLastUpdated;
+            _tmpLastUpdated = _cursor.getLong(_cursorIndexOfLastUpdated);
+            _result = new ServiceRates(_tmpId,_tmpSprayingRatePerAcre,_tmpCropCuttingRatePerAcre,_tmpGlobalTrendPercent,_tmpLastUpdated);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<ActivityRecord>> getAllRecords() {
+    final String _sql = "SELECT * FROM activity_records ORDER BY timestamp DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"activity_records"}, new Callable<List<ActivityRecord>>() {
+      @Override
+      @NonNull
+      public List<ActivityRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
+          final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
+          final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
+          final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ActivityRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpTitle;
+            _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpLocation;
+            _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
+            final double _tmpCost;
+            _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final RecordStatus _tmpStatus;
+            _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
+            final RecordCategory _tmpCategory;
+            _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
+            final String _tmpSeason;
+            _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpStatus,_tmpCategory,_tmpSeason,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<ActivityRecord>> getRecordsBySeason(final String season) {
+    final String _sql = "SELECT * FROM activity_records WHERE season = ? ORDER BY timestamp DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, season);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"activity_records"}, new Callable<List<ActivityRecord>>() {
+      @Override
+      @NonNull
+      public List<ActivityRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
+          final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
+          final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
+          final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ActivityRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpTitle;
+            _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpLocation;
+            _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
+            final double _tmpCost;
+            _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final RecordStatus _tmpStatus;
+            _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
+            final RecordCategory _tmpCategory;
+            _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
+            final String _tmpSeason;
+            _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpStatus,_tmpCategory,_tmpSeason,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<ActivityRecord>> getRecordsByStatus(final RecordStatus status) {
+    final String _sql = "SELECT * FROM activity_records WHERE status = ? ORDER BY timestamp DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, __RecordStatus_enumToString(status));
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"activity_records"}, new Callable<List<ActivityRecord>>() {
+      @Override
+      @NonNull
+      public List<ActivityRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
+          final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
+          final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
+          final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ActivityRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpTitle;
+            _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpLocation;
+            _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
+            final double _tmpCost;
+            _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final RecordStatus _tmpStatus;
+            _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
+            final RecordCategory _tmpCategory;
+            _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
+            final String _tmpSeason;
+            _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpStatus,_tmpCategory,_tmpSeason,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @NonNull
+  public static List<Class<?>> getRequiredConverters() {
+    return Collections.emptyList();
+  }
+
+  private String __RecordStatus_enumToString(@NonNull final RecordStatus _value) {
+    switch (_value) {
+      case COMPLETED: return "COMPLETED";
+      case INVOICED: return "INVOICED";
+      case ARCHIVED: return "ARCHIVED";
+      default: throw new IllegalArgumentException("Can't convert enum to string, unknown enum value: " + _value);
+    }
+  }
+
+  private String __RecordCategory_enumToString(@NonNull final RecordCategory _value) {
+    switch (_value) {
+      case LAND: return "LAND";
+      case SEEDS: return "SEEDS";
+      case MAINTENANCE: return "MAINTENANCE";
+      case IRRIGATION: return "IRRIGATION";
+      case SPRAYING: return "SPRAYING";
+      case HARVESTING: return "HARVESTING";
+      case OTHER: return "OTHER";
+      default: throw new IllegalArgumentException("Can't convert enum to string, unknown enum value: " + _value);
+    }
+  }
+
+  private RecordStatus __RecordStatus_stringToEnum(@NonNull final String _value) {
+    switch (_value) {
+      case "COMPLETED": return RecordStatus.COMPLETED;
+      case "INVOICED": return RecordStatus.INVOICED;
+      case "ARCHIVED": return RecordStatus.ARCHIVED;
+      default: throw new IllegalArgumentException("Can't convert value to enum, unknown value: " + _value);
+    }
+  }
+
+  private RecordCategory __RecordCategory_stringToEnum(@NonNull final String _value) {
+    switch (_value) {
+      case "LAND": return RecordCategory.LAND;
+      case "SEEDS": return RecordCategory.SEEDS;
+      case "MAINTENANCE": return RecordCategory.MAINTENANCE;
+      case "IRRIGATION": return RecordCategory.IRRIGATION;
+      case "SPRAYING": return RecordCategory.SPRAYING;
+      case "HARVESTING": return RecordCategory.HARVESTING;
+      case "OTHER": return RecordCategory.OTHER;
+      default: throw new IllegalArgumentException("Can't convert value to enum, unknown value: " + _value);
+    }
+  }
+}

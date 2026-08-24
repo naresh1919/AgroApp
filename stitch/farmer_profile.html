@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Farmer Profile &amp; Land Entry</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;800&amp;family=Work+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#fed3c7",
+                        "surface-container-highest": "#e2e2e2",
+                        "secondary-fixed-dim": "#e7bdb1",
+                        "on-secondary-fixed": "#2c160e",
+                        "inverse-surface": "#2f3131",
+                        "primary": "#0d631b",
+                        "surface": "#f9f9f9",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#795950",
+                        "surface-container": "#eeeeee",
+                        "primary-fixed-dim": "#88d982",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#f3e57b",
+                        "surface-dim": "#dadada",
+                        "secondary": "#77574d",
+                        "on-surface-variant": "#40493d",
+                        "on-tertiary-container": "#474000",
+                        "primary-container": "#2e7d32",
+                        "tertiary": "#695f00",
+                        "outline-variant": "#bfcaba",
+                        "secondary-fixed": "#ffdbd0",
+                        "on-primary-fixed": "#002204",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#1a1c1c",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#5d4037",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#4f4700",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#201c00",
+                        "surface-tint": "#1b6d24",
+                        "tertiary-fixed-dim": "#d6c862",
+                        "surface-container-low": "#f3f3f3",
+                        "background": "#f9f9f9",
+                        "inverse-on-surface": "#f1f1f1",
+                        "outline": "#707a6c",
+                        "surface-bright": "#f9f9f9",
+                        "tertiary-container": "#baad4a",
+                        "on-primary-fixed-variant": "#005312",
+                        "on-surface": "#1a1c1c",
+                        "inverse-primary": "#88d982",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e2e2e2",
+                        "on-primary-container": "#cbffc2",
+                        "surface-container-high": "#e8e8e8",
+                        "primary-fixed": "#a3f69c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Public Sans"],
+                        "body": ["Work Sans"],
+                        "label": ["Work Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f9f9f9;
+            color: #1a1c1c;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-stone-50 dark:bg-stone-950 bg-stone-100 dark:bg-stone-900 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high ring-2 ring-primary/10">
+<img alt="Farmer Profile Avatar" class="w-full h-full object-cover" data-alt="Close-up portrait of a weathered, smiling middle-aged farmer with a straw hat against a blurred green field background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4wlF4LQ-NIKCQ9qWbBmzOKERUIZfx48i_ASWjDjUnKTQNBUgFiqpK1avJvKBuzHF0RrMahpTP1_PjHQMpYM9RZC4di6fYAnu5RtcTAvc4JvKvRKly5GQslY5B0bYQ8VS0UmJpAlzfOpOHwhx0eDQNFn374X30ovRyn_9fcOBZmoJbxPo8c8DjyoQh2d0s4uzxjhYvf8qjFIzu5u01ODO3C1Gv_THQmiOpAMSPRL2p2WSdAH56gR37r0dTYbv9eTaMUaUGtmHPrzg"/>
+</div>
+<h1 class="font-public-sans font-bold tracking-tight text-lg text-green-900 dark:text-green-100 uppercase tracking-widest">The Modern Agronomist</h1>
+</div>
+<button class="text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors active:scale-95 duration-150 p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</header>
+<main class="max-w-md mx-auto px-6 py-8 pb-32">
+<!-- Hero Editorial Section -->
+<div class="mb-12">
+<span class="font-label text-[10px] uppercase tracking-[0.2em] text-secondary font-semibold mb-2 block">Enterprise Management</span>
+<h2 class="font-headline text-4xl font-extrabold text-on-surface leading-none mb-4">Establish Your <br/><span class="text-primary italic">Heritage.</span></h2>
+<p class="text-on-surface-variant text-sm leading-relaxed max-w-[80%]">Define your operational footprint to generate precise yield forecasts and economic projections for the current season.</p>
+</div>
+<!-- Form Section -->
+<div class="space-y-10">
+<!-- Farmer Identity Zone -->
+<section class="bg-surface-container-low rounded-xl p-6 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 opacity-5">
+<span class="material-symbols-outlined text-[120px]" data-icon="person">person</span>
+</div>
+<h3 class="font-label text-[11px] uppercase tracking-widest text-outline mb-6 flex items-center gap-2">
+<span class="w-4 h-[1px] bg-outline"></span> Personal Identity
+                </h3>
+<div class="space-y-8">
+<div class="relative">
+<label class="block text-[10px] uppercase font-bold text-primary tracking-tighter mb-1" for="farmer-name">Full Name</label>
+<input class="w-full bg-surface-container-lowest border-0 border-b-[3px] border-outline-variant px-0 py-3 text-lg font-medium focus:ring-0 focus:border-primary transition-all placeholder:text-stone-300" id="farmer-name" placeholder="e.g. Elias Thorne" type="text"/>
+</div>
+</div>
+</section>
+<!-- Land Assets Zone -->
+<section class="bg-surface-container-low rounded-xl p-6 relative overflow-hidden">
+<div class="absolute -right-6 -bottom-6 opacity-5">
+<span class="material-symbols-outlined text-[140px]" data-icon="landscape">landscape</span>
+</div>
+<h3 class="font-label text-[11px] uppercase tracking-widest text-outline mb-6 flex items-center gap-2">
+<span class="w-4 h-[1px] bg-outline"></span> Operational Scale
+                </h3>
+<div class="grid grid-cols-1 gap-8">
+<div class="relative">
+<label class="block text-[10px] uppercase font-bold text-primary tracking-tighter mb-1" for="land-acres">Total Owned Land</label>
+<div class="flex items-end">
+<input class="w-full bg-surface-container-lowest border-0 border-b-[3px] border-outline-variant px-0 py-3 text-4xl font-headline font-bold focus:ring-0 focus:border-primary transition-all placeholder:text-stone-300" id="land-acres" placeholder="0.00" type="number"/>
+<span class="pb-3 pl-3 font-headline font-extrabold text-stone-400 text-sm tracking-widest">ACRES</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Action Area -->
+<div class="pt-4">
+<button class="w-full py-5 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary font-headline font-bold text-lg tracking-wide shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-3">
+                    Save Profile
+                    <span class="material-symbols-outlined text-xl" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<p class="text-center mt-6 text-[10px] font-label uppercase tracking-widest text-outline px-10">
+                    Data is stored securely using sovereign cryptographic standards for agricultural privacy.
+                </p>
+</div>
+</div>
+<!-- Secondary Visual Anchor -->
+<div class="mt-16 rounded-2xl overflow-hidden aspect-[16/10] bg-surface-container-high relative">
+<img alt="Agricultural Landscape" class="w-full h-full object-cover grayscale-[30%] opacity-80 mix-blend-multiply" data-alt="Sweeping wide angle of a rolling green wheat field under a vast clear blue sky at midday with high contrast" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYBr1WAKEc4r6sR6J9DQmi4j3wWikpcrP1Khtx0cvysDKxeY5C_dfigUqA2n0NlL6zCYw9fFA_qUjwTUHnZ3NkdwfJXI4h_fvz-wXmpbNZ29L0RkUvE3iBpk1Gpm7a-qRxrntJRk5WEWXLu5D87fTX0rEcJLCKBsvuOTIpcLdf6KmtKwzF6dMd5aKMR5tN2Kk58FJRz6FlvTx8fswLS9GyOpU26uHyzT0q6ooD12ZJ5iIYIKwh3MnBARSL-0Dynay0hkh22NmRUOU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-6">
+<div class="flex items-center gap-2 text-primary font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+<span class="text-[10px] uppercase tracking-tighter">Central Valley Sector 7</span>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-stone-50/80 dark:bg-stone-950/80 backdrop-blur-xl shadow-[0_-8px_32px_rgba(44,22,14,0.06)] rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 py-1.5 hover:text-green-700 dark:hover:text-green-300 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="landscape">landscape</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter mt-1">Land</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 py-1.5 hover:text-green-700 dark:hover:text-green-300 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter mt-1">Rates</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 py-1.5 hover:text-green-700 dark:hover:text-green-300 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter mt-1">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 py-1.5 hover:text-green-700 dark:hover:text-green-300 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="history_inverted">change_history</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter mt-1">History</span>
+</div>
+</nav>
+</body></html>

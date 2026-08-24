@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">The Modern Agronomist</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_rates">Rates</string>
+    <string name="title_land">Land</string>
+    <string name="title_history">History</string>
+</resources>

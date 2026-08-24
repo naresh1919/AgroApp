@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;800;900&amp;family=Work+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#fed3c7",
+                    "surface-container-highest": "#e2e2e2",
+                    "secondary-fixed-dim": "#e7bdb1",
+                    "on-secondary-fixed": "#2c160e",
+                    "inverse-surface": "#2f3131",
+                    "primary": "#0d631b",
+                    "surface": "#f9f9f9",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#795950",
+                    "surface-container": "#eeeeee",
+                    "primary-fixed-dim": "#88d982",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#f3e57b",
+                    "surface-dim": "#dadada",
+                    "secondary": "#77574d",
+                    "on-surface-variant": "#40493d",
+                    "on-tertiary-container": "#474000",
+                    "primary-container": "#2e7d32",
+                    "tertiary": "#695f00",
+                    "outline-variant": "#bfcaba",
+                    "secondary-fixed": "#ffdbd0",
+                    "on-primary-fixed": "#002204",
+                    "surface-container-lowest": "#ffffff",
+                    "on-background": "#1a1c1c",
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed-variant": "#5d4037",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed-variant": "#4f4700",
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed": "#201c00",
+                    "surface-tint": "#1b6d24",
+                    "tertiary-fixed-dim": "#d6c862",
+                    "surface-container-low": "#f3f3f3",
+                    "background": "#f9f9f9",
+                    "inverse-on-surface": "#f1f1f1",
+                    "outline": "#707a6c",
+                    "surface-bright": "#f9f9f9",
+                    "tertiary-container": "#baad4a",
+                    "on-primary-fixed-variant": "#005312",
+                    "on-surface": "#1a1c1c",
+                    "inverse-primary": "#88d982",
+                    "on-tertiary": "#ffffff",
+                    "surface-variant": "#e2e2e2",
+                    "on-primary-container": "#cbffc2",
+                    "surface-container-high": "#e8e8e8",
+                    "primary-fixed": "#a3f69c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Public Sans"],
+                    "body": ["Work Sans"],
+                    "label": ["Work Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .editorial-gradient {
+            background: linear-gradient(135deg, #0d631b 0%, #2e7d32 100%);
+        }
+        .glass-nav {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-stone-50 flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-highest">
+<img alt="Farmer Profile Avatar" data-alt="Close-up portrait of a weathered but smiling modern farmer wearing a clean denim shirt against a soft bokeh field background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCo9yvIzbHSWa9e_hz6wZmw3UVZeXsXcWI6rqUIr2C8w8DRDqi6wwFshDjSgCc_ImJMxeCvOLxBuokwOq_iqJ3SQwtKgjLq40SXEIYSnpwONtiuZAx7b4p7l3E6SOoL6-zTHqEYETc--nUdPzXtU4Uq69T8GX_0LXUzzAX-9DJIT4QIP5bpDDTQPrbRXZDXTWfExsNqeVWtLUYH_JoBOER2OGVPokTzaG5i1mrHabT8sMeDghHr99cbNwXYihvXvKOv-mvWShyvvPE"/>
+</div>
+<span class="text-lg font-bold text-green-900 uppercase tracking-widest font-headline">The Modern Agronomist</span>
+</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-stone-500 hover:bg-stone-200 transition-colors px-3 py-1 rounded-lg font-label text-sm" href="#">Land</a>
+<a class="text-stone-500 hover:bg-stone-200 transition-colors px-3 py-1 rounded-lg font-label text-sm" href="#">Rates</a>
+<a class="text-green-800 font-bold hover:bg-stone-200 transition-colors px-3 py-1 rounded-lg font-label text-sm" href="#">Dashboard</a>
+<a class="text-stone-500 hover:bg-stone-200 transition-colors px-3 py-1 rounded-lg font-label text-sm" href="#">History</a>
+</nav>
+<button class="material-symbols-outlined text-green-800 p-2 hover:bg-stone-200 transition-colors rounded-full active:scale-95 duration-150" data-icon="settings">settings</button>
+</header>
+<main class="max-w-7xl mx-auto px-6 py-8 pb-32">
+<!-- Editorial Header Section -->
+<section class="mb-12">
+<h1 class="font-headline font-black text-6xl md:text-8xl text-on-surface tracking-tighter mb-4">
+                Operational <span class="text-primary italic">Intelligence</span>
+</h1>
+<p class="font-body text-on-surface-variant text-lg max-w-2xl leading-relaxed">
+                Strategic financial overview for the current seasonal cycle. Values calculated based on real-time commodity rates and registered acreage.
+            </p>
+</section>
+<!-- Bento Grid: Main Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12">
+<!-- Total Land Card -->
+<div class="md:col-span-8 bg-surface-container-lowest rounded-xl p-8 relative overflow-hidden flex flex-col justify-between min-h-[320px]">
+<div class="z-10">
+<span class="font-label text-xs uppercase tracking-[0.2em] text-outline mb-2 block">Total Operational Land</span>
+<h2 class="font-headline font-black text-7xl text-primary leading-none">1,240<span class="text-3xl ml-2 tracking-normal font-medium text-on-surface-variant">ACRES</span></h2>
+</div>
+<div class="z-10 flex gap-4 mt-8">
+<div class="flex-1 bg-surface-container-low p-4 rounded-lg">
+<span class="block text-[10px] uppercase font-bold text-outline mb-1">CULTIVATED</span>
+<span class="block font-headline font-bold text-xl text-on-surface">842 AC</span>
+</div>
+<div class="flex-1 bg-surface-container-low p-4 rounded-lg">
+<span class="block text-[10px] uppercase font-bold text-outline mb-1">FALLOW</span>
+<span class="block font-headline font-bold text-xl text-on-surface">398 AC</span>
+</div>
+</div>
+<div class="absolute right-[-10%] top-[-10%] w-2/3 h-full opacity-10 pointer-events-none">
+<img alt="Acreage background" class="object-cover w-full h-full rotate-12" data-alt="Aerial view of perfectly geometric agricultural fields with varying shades of green and brown earth textures" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAm4Ps8Ohjn9_WsefmTQpDl5DYl_VdXZ68oFP-8i0UQoDqzC3D7a232KEsXC2oF0CZmwb1yVR9U-s6u9UV-WOkd4FqArSZT0xWRM4ck-HW4v44HBXOe5hArvCO4dONVzpUm5uI-V3_dyI-HAEbDL_tWRoG-UQSmpA4EelJvlvcpsZvhx0ltf1T5_-TslgFX2v8_sgnuGOLikKzZPbNVK8R9OFj6791dJnuZNfjO3rAhtxW5ON2fXEGWrxYDWyyxlrT0IyqIAValRgY"/>
+</div>
+</div>
+<!-- Estimated Spraying Cost -->
+<div class="md:col-span-4 bg-secondary-fixed-dim rounded-xl p-8 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start">
+<span class="font-label text-xs uppercase tracking-[0.2em] text-on-secondary-fixed mb-2 block">Estimated Spraying</span>
+<span class="material-symbols-outlined text-on-secondary-fixed" data-icon="water_drop">water_drop</span>
+</div>
+<h2 class="font-headline font-extrabold text-5xl text-on-secondary-fixed leading-tight">$42,160</h2>
+</div>
+<div>
+<div class="w-full h-1 bg-on-secondary-fixed/10 rounded-full mb-3">
+<div class="w-3/4 h-full bg-on-secondary-fixed rounded-full"></div>
+</div>
+<p class="font-label text-[10px] text-on-secondary-fixed-variant leading-tight">
+                        BASED ON $34.00/ACRE RATE ACROSS ACTIVE SECTORS.
+                    </p>
+</div>
+</div>
+<!-- Estimated Harvesting Cost -->
+<div class="md:col-span-4 bg-primary-fixed-dim rounded-xl p-8 flex flex-col justify-between min-h-[320px]">
+<div>
+<div class="flex justify-between items-start">
+<span class="font-label text-xs uppercase tracking-[0.2em] text-on-primary-fixed mb-2 block">Estimated Harvesting</span>
+<span class="material-symbols-outlined text-on-primary-fixed" data-icon="precision_manufacturing">precision_manufacturing</span>
+</div>
+<h2 class="font-headline font-extrabold text-5xl text-on-primary-fixed leading-tight">$105,400</h2>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 bg-on-primary-fixed/10 rounded text-[10px] font-bold text-on-primary-fixed">PROJECTED OCT 24</span>
+<span class="text-[10px] font-label text-on-primary-fixed-variant">85.00 / ACRE</span>
+</div>
+</div>
+<!-- Visual Progress Chart Section -->
+<div class="md:col-span-8 bg-surface-container-low rounded-xl p-8">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h3 class="font-headline font-bold text-2xl text-on-surface">Seasonal Expenditure Flow</h3>
+<p class="text-sm text-on-surface-variant font-label uppercase tracking-widest">Quarterly projection vs Actuals</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Growth</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Maintenance</span>
+</div>
+</div>
+</div>
+<!-- Abstract "Chart" using layout -->
+<div class="flex items-end justify-between h-48 gap-3">
+<div class="flex-1 bg-surface-container-highest rounded-t-lg h-[40%]"></div>
+<div class="flex-1 bg-primary rounded-t-lg h-[65%]"></div>
+<div class="flex-1 bg-secondary rounded-t-lg h-[45%]"></div>
+<div class="flex-1 bg-primary-container rounded-t-lg h-[90%]"></div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg h-[30%]"></div>
+<div class="flex-1 bg-primary rounded-t-lg h-[75%]"></div>
+<div class="flex-1 bg-secondary rounded-t-lg h-[55%]"></div>
+<div class="flex-1 bg-primary-container rounded-t-lg h-[85%]"></div>
+<div class="flex-1 bg-primary rounded-t-lg h-[95%]"></div>
+<div class="flex-1 bg-secondary rounded-t-lg h-[40%]"></div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] font-bold text-outline-variant uppercase">
+<span>MAR</span><span>APR</span><span>MAY</span><span>JUN</span><span>JUL</span><span>AUG</span><span>SEP</span><span>OCT</span><span>NOV</span><span>DEC</span>
+</div>
+</div>
+</div>
+<!-- Secondary Action Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<button class="editorial-gradient text-on-primary py-5 px-8 rounded-xl flex justify-between items-center group active:scale-95 transition-transform">
+<span class="font-headline font-bold text-xl">Generate Full Fiscal Report</span>
+<span class="material-symbols-outlined group-hover:translate-x-2 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="bg-surface-container-lowest border-b-4 border-outline-variant py-5 px-8 rounded-xl flex justify-between items-center group active:scale-95 transition-transform">
+<span class="font-headline font-bold text-xl text-on-surface">Review Input Rates</span>
+<span class="material-symbols-outlined text-primary" data-icon="edit_square">edit_square</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-stone-50/80 backdrop-blur-xl shadow-[0_-8px_32px_rgba(44,22,14,0.06)] rounded-t-xl">
+<div class="flex flex-col items-center justify-center text-stone-500 py-1.5 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="landscape">landscape</span>
+<span class="font-label text-[10px] uppercase tracking-tighter mt-1">Land</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-500 py-1.5 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label text-[10px] uppercase tracking-tighter mt-1">Rates</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-green-100 text-green-900 rounded-2xl px-5 py-1.5 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label text-[10px] uppercase tracking-tighter mt-1 font-bold">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-stone-500 py-1.5 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" data-icon="history_inverted">change_history</span>
+<span class="font-label text-[10px] uppercase tracking-tighter mt-1">History</span>
+</div>
+</nav>
+</body></html>

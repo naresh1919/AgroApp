@@ -1,0 +1,7 @@
+com.agri.costtracker
+string app_name
+string title_dashboard
+string title_history
+string title_land
+string title_rates
+style Theme_AgriCostTracker

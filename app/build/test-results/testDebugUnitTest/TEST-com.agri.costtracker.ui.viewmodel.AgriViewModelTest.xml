@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-08-23T11:14:06.491Z" hostname="DESKTOP-JHJO2V4" time="0.087">
+  <properties/>
+  <testcase name="addRecord_and_deleteRecord_updatesFlows" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.019"/>
+  <testcase name="saveProfile_withExplicitCultivatedAndFallow_usesExplicitValues" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.012"/>
+  <testcase name="saveProfile_withNullCultivatedAndFallow_computesDefaults" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.005"/>
+  <testcase name="filterStatus_and_seasonFilter_correctlyFiltersRecords" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.013"/>
+  <testcase name="saveRates_updatesRateValues" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.005"/>
+  <testcase name="initialStates_haveExpectedDefaults" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.01"/>
+  <testcase name="dashboardMetrics_withNoRecords_returnsFallbackValues" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.012"/>
+  <testcase name="dashboardMetrics_calculationsWithRecords_areAccurate" classname="com.agri.costtracker.ui.viewmodel.AgriViewModelTest" time="0.011"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

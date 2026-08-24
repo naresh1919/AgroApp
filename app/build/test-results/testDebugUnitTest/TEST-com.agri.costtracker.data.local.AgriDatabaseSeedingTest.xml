@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.agri.costtracker.data.local.AgriDatabaseSeedingTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-08-23T11:14:06.323Z" hostname="DESKTOP-JHJO2V4" time="0.125">
+  <properties/>
+  <testcase name="seedInitialData_populatesProfileRatesAndRecords" classname="com.agri.costtracker.data.local.AgriDatabaseSeedingTest" time="0.122"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

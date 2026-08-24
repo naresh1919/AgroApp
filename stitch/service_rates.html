@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;800;900&amp;family=Work+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#fed3c7",
+                        "surface-container-highest": "#e2e2e2",
+                        "secondary-fixed-dim": "#e7bdb1",
+                        "on-secondary-fixed": "#2c160e",
+                        "inverse-surface": "#2f3131",
+                        "primary": "#0d631b",
+                        "surface": "#f9f9f9",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#795950",
+                        "surface-container": "#eeeeee",
+                        "primary-fixed-dim": "#88d982",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#f3e57b",
+                        "surface-dim": "#dadada",
+                        "secondary": "#77574d",
+                        "on-surface-variant": "#40493d",
+                        "on-tertiary-container": "#474000",
+                        "primary-container": "#2e7d32",
+                        "tertiary": "#695f00",
+                        "outline-variant": "#bfcaba",
+                        "secondary-fixed": "#ffdbd0",
+                        "on-primary-fixed": "#002204",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#1a1c1c",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed-variant": "#5d4037",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#4f4700",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#201c00",
+                        "surface-tint": "#1b6d24",
+                        "tertiary-fixed-dim": "#d6c862",
+                        "surface-container-low": "#f3f3f3",
+                        "background": "#f9f9f9",
+                        "inverse-on-surface": "#f1f1f1",
+                        "outline": "#707a6c",
+                        "surface-bright": "#f9f9f9",
+                        "tertiary-container": "#baad4a",
+                        "on-primary-fixed-variant": "#005312",
+                        "on-surface": "#1a1c1c",
+                        "inverse-primary": "#88d982",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e2e2e2",
+                        "on-primary-container": "#cbffc2",
+                        "surface-container-high": "#e8e8e8",
+                        "primary-fixed": "#a3f69c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Public Sans"],
+                        "body": ["Work Sans"],
+                        "label": ["Work Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Work Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Public Sans', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-stone-50 dark:bg-stone-950 flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container">
+<img alt="Farmer Profile Avatar" class="w-full h-full object-cover" data-alt="Close-up portrait of a weathered, smiling middle-aged farmer wearing a denim cap, soft natural outdoor sunlight lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmeFSQ7qbjvO3l5RyyChI08RpUD7eiIgrXl8k7kqE4tXG0h_loSxEqnk_l5eP12eHjmrI1CMEPpinzKtY1TyVg20qkrrpqU2AVZkUBikRD2yuw4xXRt0k0qj1UCHAqQ1Cd35L1GrWl_ZelQmK3-HoxaXzSFNa6mPJJQCwTClHQbbUkvkNT42TyWZt5k3LUaTRPS8f1L0risdCj_VWYpr6mzSsnzRDTx8vYlWSAWWRsMxFfN2delYy8JqPTjgEPTCo3B-YPibWPQjs"/>
+</div>
+<span class="text-lg font-bold text-green-900 dark:text-green-100 uppercase tracking-widest font-public-sans">The Modern Agronomist</span>
+</div>
+<button class="text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors p-2 rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</header>
+<main class="px-6 pt-8 max-w-lg mx-auto">
+<!-- Editorial Header -->
+<div class="mb-10">
+<span class="text-primary font-bold tracking-widest text-[10px] uppercase font-label">Configuration</span>
+<h1 class="text-4xl font-black text-on-surface mt-1 tracking-tight">Service Rates</h1>
+<p class="text-on-surface-variant mt-2 text-sm leading-relaxed">Adjust your operational costs per acre for precision financial forecasting.</p>
+</div>
+<!-- Bento Layout Form -->
+<form class="space-y-6">
+<!-- Spraying Service Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group shadow-[0_8px_32px_rgba(44,22,14,0.04)]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-xl font-bold text-on-surface">Spraying</h2>
+<span class="text-[10px] uppercase tracking-tighter font-label text-on-surface-variant">Pesticides &amp; Fertilizers</span>
+</div>
+<div class="bg-primary-container/10 p-3 rounded-lg text-primary">
+<span class="material-symbols-outlined" data-icon="water_drop">water_drop</span>
+</div>
+</div>
+<div class="relative">
+<label class="block text-[11px] font-bold uppercase text-stone-400 mb-1 ml-1">Cost per Acre</label>
+<div class="flex items-baseline gap-2 bg-surface-container-low rounded-lg p-4 border-b-4 border-outline-variant focus-within:border-primary transition-all">
+<span class="text-2xl font-black text-on-surface-variant">$</span>
+<input class="bg-transparent border-none p-0 focus:ring-0 text-3xl font-black text-on-surface w-full font-headline" placeholder="0.00" step="0.01" type="number" value="45.00"/>
+<span class="text-xs font-bold text-on-surface-variant">USD/AC</span>
+</div>
+</div>
+</div>
+<!-- Crop Cutting Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden group shadow-[0_8px_32px_rgba(44,22,14,0.04)]">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-xl font-bold text-on-surface">Crop Cutting</h2>
+<span class="text-[10px] uppercase tracking-tighter font-label text-on-surface-variant">Harvesting &amp; Threshing</span>
+</div>
+<div class="bg-secondary-container p-3 rounded-lg text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="agriculture">agriculture</span>
+</div>
+</div>
+<div class="relative">
+<label class="block text-[11px] font-bold uppercase text-stone-400 mb-1 ml-1">Cost per Acre</label>
+<div class="flex items-baseline gap-2 bg-surface-container-low rounded-lg p-4 border-b-4 border-outline-variant focus-within:border-primary transition-all">
+<span class="text-2xl font-black text-on-surface-variant">$</span>
+<input class="bg-transparent border-none p-0 focus:ring-0 text-3xl font-black text-on-surface w-full font-headline" placeholder="0.00" step="0.01" type="number" value="120.00"/>
+<span class="text-xs font-bold text-on-surface-variant">USD/AC</span>
+</div>
+</div>
+</div>
+<!-- Visual Context Section -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-secondary-fixed-dim rounded-xl p-4 flex flex-col justify-between h-32">
+<span class="text-[10px] font-bold uppercase text-on-secondary-fixed">Global Trend</span>
+<div>
+<div class="text-2xl font-black text-on-secondary-fixed">+4.2%</div>
+<div class="text-[10px] text-on-secondary-fixed-variant">Vs Last Season</div>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl overflow-hidden relative h-32">
+<img alt="Field background" class="w-full h-full object-cover opacity-60" data-alt="Wide expansive wheat field under a vast blue sky with distant silhouettes of farm machinery and soft lens flare" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWkKmt7CrGqaCL7gtndicv8nqBl63c4lvSdopuyCvvLesT_iVoklh8GUY2rWCE29rSX3mSAckgbSAhhfiCvp2pfCOVWeK0M8gKcTRMPKREWxP2_iGpy-sr3cXuzVPQhRngdZq_fUH97yLlraLzOKkLNKTkEenz_JoEVsc_KzzGyy8d8Ok3wl0_XwGXkHBKCR24CSO_fqvYv440xvbwfni-Sa2HVdi1UGV16Cdx_pOyd77UlTtKMvqPWjpv1EBOd5u-Pt4iT-P28lg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent p-4 flex flex-col justify-end">
+<span class="text-[10px] font-bold uppercase text-on-surface">Region</span>
+<span class="font-bold text-xs">Central Plains</span>
+</div>
+</div>
+</div>
+<!-- Primary Action -->
+<button class="w-full py-5 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold text-lg tracking-wide shadow-xl active:scale-[0.98] transition-transform flex items-center justify-center gap-3 mt-4" type="submit">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+                Update Rates
+            </button>
+</form>
+<!-- Informational Footer -->
+<div class="mt-8 p-4 bg-tertiary-container/10 rounded-lg border-l-4 border-tertiary">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-tertiary" data-icon="info">info</span>
+<p class="text-xs text-on-tertiary-container leading-relaxed">
+                    Changes to rates will be applied to all future calculations. Existing historical records for "Land" and "History" will remain unaffected to preserve audit integrity.
+                </p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-stone-50/80 dark:bg-stone-950/80 backdrop-blur-xl shadow-[0_-8px_32px_rgba(44,22,14,0.06)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 py-1.5 hover:text-green-700 dark:hover:text-green-300 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="landscape">landscape</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter">Land</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-green-100 dark:bg-green-900/40 text-green-900 dark:text-green-100 rounded-2xl px-5 py-1.5 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1 text-green-800 dark:text-green-400" data-icon="payments">payments</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter font-bold text-green-800 dark:text-green-400">Rates</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 py-1.5 hover:text-green-700 dark:hover:text-green-300 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-500 dark:text-stone-400 py-1.5 hover:text-green-700 dark:hover:text-green-300 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="history_inverted">change_history</span>
+<span class="font-work-sans text-[10px] uppercase tracking-tighter">History</span>
+</a>
+</nav>
+</body></html>
