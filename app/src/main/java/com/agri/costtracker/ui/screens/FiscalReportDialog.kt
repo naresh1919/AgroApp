@@ -1,5 +1,7 @@
 package com.agri.costtracker.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -97,8 +99,9 @@ fun FiscalReportDialog(
                         ReportRow("${strings.droneRate}:", "₹${String.format(Locale.US, "%.2f", metrics.sprayingRate)} / ${strings.acres}")
                         ReportRow("${strings.cuttingRate}:", "₹${String.format(Locale.US, "%.2f", metrics.cropCuttingRate)} / ${strings.acres}")
                         HorizontalDivider(color = OutlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 4.dp))
-                        ReportRow(strings.totalBilled + ":", "₹${String.format(Locale.US, "%,.2f", metrics.totalRevenue)}", isTotal = true)
-                        ReportRow(strings.pendingDue + ":", "₹${String.format(Locale.US, "%,.2f", metrics.pendingPayables)}")
+                        ReportRow(strings.totalBilled + ":", "₹${String.format(Locale.US, "%,.2f", metrics.totalRevenue)}")
+                        ReportRow(strings.totalCollected + ":", "₹${String.format(Locale.US, "%,.2f", metrics.totalPaid)}")
+                        ReportRow(strings.pendingDue + ":", "₹${String.format(Locale.US, "%,.2f", metrics.pendingPayables)}", isTotal = true)
                     }
                 }
 
@@ -106,8 +109,7 @@ fun FiscalReportDialog(
 
                 Button(
                     onClick = {
-                        Toast.makeText(context, "Fiscal report exported successfully!", Toast.LENGTH_SHORT).show()
-                        onDismiss()
+                        exportFiscalReport(context, metrics, businessName, strings)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -131,6 +133,46 @@ fun FiscalReportDialog(
                 }
             }
         }
+    }
+}
+
+private fun exportFiscalReport(
+    context: Context,
+    metrics: DashboardMetrics,
+    businessName: String,
+    strings: AppStrings
+) {
+    val sb = StringBuilder()
+    sb.append("🌾 *AGRI SERVICES - BUSINESS FISCAL REPORT* 🌾\n")
+    sb.append("════════════════════════════════════\n")
+    sb.append("🏢 *Enterprise:* $businessName\n")
+    sb.append("📅 *Season:* 2024 Summary\n")
+    sb.append("👥 *Total Registered Farmers:* ${metrics.farmersCount}\n")
+    sb.append("🚁 *Deployments:* ${metrics.recordsCount}\n")
+    sb.append("────────────────────────────────────\n")
+    sb.append("🌱 *Total Land Serviced:* ${String.format(Locale.US, "%.1f", metrics.totalAcresServed)} ${strings.acres}\n")
+    sb.append("   • Drone Spraying: ${String.format(Locale.US, "%.1f", metrics.totalSprayingAcres)} ${strings.acres}\n")
+    sb.append("   • Cutting Machine: ${String.format(Locale.US, "%.1f", metrics.totalCuttingAcres)} ${strings.acres}\n")
+    sb.append("────────────────────────────────────\n")
+    sb.append("💵 *Financial Summary:*\n")
+    sb.append("   • Drone Rate: ₹${String.format(Locale.US, "%.2f", metrics.sprayingRate)} / ${strings.acres}\n")
+    sb.append("   • Cutting Rate: ₹${String.format(Locale.US, "%.2f", metrics.cropCuttingRate)} / ${strings.acres}\n")
+    sb.append("   • Total Billed: ₹${String.format(Locale.US, "%,.2f", metrics.totalRevenue)}\n")
+    sb.append("   • Total Collected: ₹${String.format(Locale.US, "%,.2f", metrics.totalPaid)}\n")
+    sb.append("   • Total Pending Due: ₹${String.format(Locale.US, "%,.2f", metrics.pendingPayables)}\n")
+    sb.append("════════════════════════════════════\n")
+
+    val sendIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_SUBJECT, "Agri Fiscal Report - 2024")
+        putExtra(Intent.EXTRA_TEXT, sb.toString())
+        type = "text/plain"
+    }
+    val shareIntent = Intent.createChooser(sendIntent, "Share Fiscal Report via")
+    try {
+        context.startActivity(shareIntent)
+    } catch (e: Exception) {
+        Toast.makeText(context, "Cannot open sharing: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 }
 

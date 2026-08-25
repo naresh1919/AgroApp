@@ -6,21 +6,24 @@ import androidx.lifecycle.viewModelScope
 import com.agri.costtracker.data.model.ActivityRecord
 import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
+import com.agri.costtracker.data.model.PaymentRecord
 import com.agri.costtracker.data.model.RecordCategory
 import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.data.model.ServiceRates
 import com.agri.costtracker.data.repository.AgriRepository
+import com.agri.costtracker.ui.localization.AppLanguage
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class DashboardMetrics(
-    val totalRevenue: Double = 9120.0,
-    val pendingPayables: Double = 5100.0,
+    val totalRevenue: Double = 136200.0,
+    val totalPaid: Double = 66450.0,
+    val pendingPayables: Double = 69750.0,
     val totalSprayingAcres: Double = 120.0,
     val totalCuttingAcres: Double = 60.0,
     val totalAcresServed: Double = 180.0,
-    val sprayingRate: Double = 35.0,
-    val cropCuttingRate: Double = 85.0,
+    val sprayingRate: Double = 450.0,
+    val cropCuttingRate: Double = 1400.0,
     val farmersCount: Int = 4,
     val recordsCount: Int = 5
 )
@@ -48,7 +51,7 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = ServiceRates()
+            initialValue = ServiceRates(sprayingRatePerAcre = 450.0, cropCuttingRatePerAcre = 1400.0)
         )
 
     val allRecords: StateFlow<List<ActivityRecord>> = repository.allRecordsFlow
@@ -58,6 +61,20 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
             initialValue = emptyList()
         )
 
+    val allPayments: StateFlow<List<PaymentRecord>> = repository.allPaymentsFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    private val _selectedLanguage = MutableStateFlow(AppLanguage.ENGLISH)
+    val selectedLanguage: StateFlow<AppLanguage> = _selectedLanguage.asStateFlow()
+
+    fun setLanguage(language: AppLanguage) {
+        _selectedLanguage.value = language
+    }
+
     private val _filterStatus = MutableStateFlow<RecordStatus?>(null)
     val filterStatus: StateFlow<RecordStatus?> = _filterStatus.asStateFlow()
 
@@ -66,13 +83,6 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
 
     private val _selectedSeason = MutableStateFlow("2024")
     val selectedSeason: StateFlow<String> = _selectedSeason.asStateFlow()
-
-    private val _selectedLanguage = MutableStateFlow(com.agri.costtracker.ui.localization.AppLanguage.ENGLISH)
-    val selectedLanguage: StateFlow<com.agri.costtracker.ui.localization.AppLanguage> = _selectedLanguage.asStateFlow()
-
-    fun setLanguage(language: com.agri.costtracker.ui.localization.AppLanguage) {
-        _selectedLanguage.value = language
-    }
 
     private val _selectedFarmerForStatement = MutableStateFlow<Farmer?>(null)
     val selectedFarmerForStatement: StateFlow<Farmer?> = _selectedFarmerForStatement.asStateFlow()
@@ -104,13 +114,15 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
     ) { farmers, rts, records ->
         val activeSeasonRecords = records.filter { it.season == "2024" }
         val totalRev = activeSeasonRecords.sumOf { it.cost }
-        val pending = activeSeasonRecords.filter { it.status == RecordStatus.INVOICED }.sumOf { it.cost }
+        val totalPaidAmt = activeSeasonRecords.sumOf { it.paidAmount }
+        val pending = (totalRev - totalPaidAmt).coerceAtLeast(0.0)
         val sprayAcres = activeSeasonRecords.filter { it.category == RecordCategory.SPRAYING }.sumOf { it.acres }
         val cuttingAcres = activeSeasonRecords.filter { it.category == RecordCategory.HARVESTING }.sumOf { it.acres }
         val totalAcres = activeSeasonRecords.sumOf { it.acres }
 
         DashboardMetrics(
             totalRevenue = totalRev,
+            totalPaid = totalPaidAmt,
             pendingPayables = pending,
             totalSprayingAcres = sprayAcres,
             totalCuttingAcres = cuttingAcres,
@@ -199,14 +211,21 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
         category: RecordCategory,
         acres: Double,
         ratePerAcre: Double,
+        paidAmount: Double,
         location: String,
-        status: RecordStatus,
         date: String = "Today",
         season: String = "2024",
         notes: String = ""
     ) {
         viewModelScope.launch {
             val calculatedCost = acres * ratePerAcre
+            val cleanPaid = paidAmount.coerceIn(0.0, calculatedCost)
+            val status = when {
+                cleanPaid >= calculatedCost -> RecordStatus.COMPLETED
+                cleanPaid > 0.0 -> RecordStatus.PARTIAL
+                else -> RecordStatus.INVOICED
+            }
+
             val record = ActivityRecord(
                 farmerId = farmerId,
                 farmerName = farmerName,
@@ -216,6 +235,8 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
                 acres = acres,
                 ratePerAcre = ratePerAcre,
                 cost = calculatedCost,
+                paidAmount = cleanPaid,
+                lastPaymentDate = if (cleanPaid > 0.0) date else "",
                 location = location,
                 status = status,
                 date = date,
@@ -223,7 +244,62 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
                 notes = notes,
                 timestamp = System.currentTimeMillis()
             )
-            repository.addRecord(record)
+            val newRecordId = repository.addRecord(record)
+
+            if (cleanPaid > 0.0) {
+                val advancePayment = PaymentRecord(
+                    recordId = newRecordId,
+                    farmerId = farmerId,
+                    farmerName = farmerName,
+                    amount = cleanPaid,
+                    date = date,
+                    paymentMode = "Advance Cash/UPI",
+                    notes = "Advance payment at booking",
+                    timestamp = System.currentTimeMillis()
+                )
+                repository.addPayment(advancePayment)
+            }
+        }
+    }
+
+    // Individual Partial / Installment Payment Recording
+    fun recordPayment(
+        record: ActivityRecord,
+        additionalAmount: Double,
+        paymentDate: String = "Today",
+        paymentMode: String = "Cash",
+        paymentNotes: String = ""
+    ) {
+        viewModelScope.launch {
+            val newTotalPaid = (record.paidAmount + additionalAmount).coerceIn(0.0, record.cost)
+            val newStatus = when {
+                newTotalPaid >= record.cost -> RecordStatus.COMPLETED
+                newTotalPaid > 0.0 -> RecordStatus.PARTIAL
+                else -> RecordStatus.INVOICED
+            }
+            val paymentAuditEntry = "Paid ₹${String.format(java.util.Locale.US, "%,.0f", additionalAmount)} on $paymentDate via $paymentMode${if (paymentNotes.isNotBlank()) " ($paymentNotes)" else ""}"
+            val updatedNotes = if (record.notes.isNotBlank()) "${record.notes} | $paymentAuditEntry" else paymentAuditEntry
+
+            val updatedRecord = record.copy(
+                paidAmount = newTotalPaid,
+                lastPaymentDate = paymentDate,
+                status = newStatus,
+                notes = updatedNotes
+            )
+            repository.addRecord(updatedRecord)
+
+            // Insert individual PaymentRecord transaction
+            val payment = PaymentRecord(
+                recordId = record.id,
+                farmerId = record.farmerId,
+                farmerName = record.farmerName,
+                amount = additionalAmount,
+                date = paymentDate,
+                paymentMode = paymentMode,
+                notes = paymentNotes,
+                timestamp = System.currentTimeMillis()
+            )
+            repository.addPayment(payment)
         }
     }
 

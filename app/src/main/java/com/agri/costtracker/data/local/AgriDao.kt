@@ -4,6 +4,7 @@ import androidx.room.*
 import com.agri.costtracker.data.model.ActivityRecord
 import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
+import com.agri.costtracker.data.model.PaymentRecord
 import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.data.model.ServiceRates
 import kotlinx.coroutines.flow.Flow
@@ -68,4 +69,23 @@ interface AgriDao {
 
     @Query("DELETE FROM activity_records")
     suspend fun clearAllRecords()
+
+    // Individual Payment Records / Installments
+    @Query("SELECT * FROM payment_records ORDER BY timestamp DESC")
+    fun getAllPayments(): Flow<List<PaymentRecord>>
+
+    @Query("SELECT * FROM payment_records WHERE farmerId = :farmerId ORDER BY timestamp DESC")
+    fun getPaymentsByFarmer(farmerId: Long): Flow<List<PaymentRecord>>
+
+    @Query("SELECT * FROM payment_records WHERE recordId = :recordId ORDER BY timestamp ASC")
+    fun getPaymentsByRecord(recordId: Long): Flow<List<PaymentRecord>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPayment(payment: PaymentRecord): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllPayments(payments: List<PaymentRecord>)
+
+    @Delete
+    suspend fun deletePayment(payment: PaymentRecord)
 }

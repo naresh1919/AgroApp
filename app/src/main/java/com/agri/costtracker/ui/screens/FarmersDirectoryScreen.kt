@@ -43,13 +43,18 @@ fun FarmersDirectoryScreen(
     val context = LocalContext.current
     val farmers by viewModel.allFarmers.collectAsState()
     val allRecords by viewModel.allRecords.collectAsState()
+    val allPayments by viewModel.allPayments.collectAsState()
     val selectedFarmerForStatement by viewModel.selectedFarmerForStatement.collectAsState()
 
     if (selectedFarmerForStatement != null) {
         FarmerStatementDialog(
             farmer = selectedFarmerForStatement!!,
             records = allRecords,
+            payments = allPayments,
             strings = strings,
+            onRecordPayment = { record, amount, date, mode, notes ->
+                viewModel.recordPayment(record, amount, date, mode, notes)
+            },
             onDismiss = { viewModel.selectFarmerForStatement(null) }
         )
     }
@@ -204,7 +209,7 @@ fun FarmersDirectoryScreen(
                             .background(OutlineVariant)
                     )
 
-                    val totalPendingAll = allRecords.filter { it.status == RecordStatus.INVOICED }.sumOf { it.cost }
+                    val totalPendingAll = (allRecords.sumOf { it.cost } - allRecords.sumOf { it.paidAmount }).coerceAtLeast(0.0)
                     Column {
                         Text(
                             text = strings.pendingBills,
@@ -267,7 +272,8 @@ fun FarmersDirectoryScreen(
                 val farmerRecords = allRecords.filter { it.farmerId == farmer.id }
                 val farmerAcres = farmerRecords.sumOf { it.acres }
                 val farmerTotalCost = farmerRecords.sumOf { it.cost }
-                val farmerPending = farmerRecords.filter { it.status == RecordStatus.INVOICED }.sumOf { it.cost }
+                val farmerTotalPaid = farmerRecords.sumOf { it.paidAmount }
+                val farmerPending = (farmerTotalCost - farmerTotalPaid).coerceAtLeast(0.0)
 
                 FarmerCardItem(
                     farmer = farmer,

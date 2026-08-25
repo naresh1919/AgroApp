@@ -3,6 +3,7 @@ package com.agri.costtracker.data.local
 import com.agri.costtracker.data.model.ActivityRecord
 import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
+import com.agri.costtracker.data.model.PaymentRecord
 import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.data.model.ServiceRates
 import kotlinx.coroutines.flow.Flow
@@ -16,8 +17,10 @@ class FakeAgriDao : AgriDao {
     private val _profileFlow = MutableStateFlow<FarmerProfile?>(null)
     private val _ratesFlow = MutableStateFlow<ServiceRates?>(null)
     private val _recordsFlow = MutableStateFlow<List<ActivityRecord>>(emptyList())
+    private val _paymentsFlow = MutableStateFlow<List<PaymentRecord>>(emptyList())
     private var nextRecordId: Long = 1L
     private var nextFarmerId: Long = 1L
+    private var nextPaymentId: Long = 1L
 
     override fun getAllFarmers(): Flow<List<Farmer>> = _farmersFlow.asStateFlow()
 
@@ -116,5 +119,43 @@ class FakeAgriDao : AgriDao {
 
     override suspend fun clearAllRecords() {
         _recordsFlow.value = emptyList()
+    }
+
+    override fun getAllPayments(): Flow<List<PaymentRecord>> = _paymentsFlow.asStateFlow()
+
+    override fun getPaymentsByFarmer(farmerId: Long): Flow<List<PaymentRecord>> {
+        return _paymentsFlow.map { list ->
+            list.filter { it.farmerId == farmerId }
+        }
+    }
+
+    override fun getPaymentsByRecord(recordId: Long): Flow<List<PaymentRecord>> {
+        return _paymentsFlow.map { list ->
+            list.filter { it.recordId == recordId }
+        }
+    }
+
+    override suspend fun insertPayment(payment: PaymentRecord): Long {
+        val idToUse = if (payment.id == 0L) nextPaymentId++ else payment.id
+        val paymentToInsert = payment.copy(id = idToUse)
+        val current = _paymentsFlow.value.toMutableList()
+        val index = current.indexOfFirst { it.id == idToUse }
+        if (index >= 0) {
+            current[index] = paymentToInsert
+        } else {
+            current.add(0, paymentToInsert)
+        }
+        _paymentsFlow.value = current
+        return idToUse
+    }
+
+    override suspend fun insertAllPayments(payments: List<PaymentRecord>) {
+        payments.forEach { insertPayment(it) }
+    }
+
+    override suspend fun deletePayment(payment: PaymentRecord) {
+        val current = _paymentsFlow.value.toMutableList()
+        current.removeAll { it.id == payment.id }
+        _paymentsFlow.value = current
     }
 }

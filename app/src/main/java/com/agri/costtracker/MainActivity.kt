@@ -78,7 +78,7 @@ fun MainAppScaffold(viewModel: AgriViewModel) {
                 showAddBookingDialog = false
                 showAddFarmerDialog = true
             },
-            onAddRecord = { farmerId, farmerName, farmerMobile, title, category, acres, ratePerAcre, location, status, date, notes ->
+            onAddRecord = { farmerId, farmerName, farmerMobile, title, category, acres, ratePerAcre, paidAmount, location, date, notes ->
                 viewModel.addServiceRecord(
                     farmerId = farmerId,
                     farmerName = farmerName,
@@ -87,8 +87,8 @@ fun MainAppScaffold(viewModel: AgriViewModel) {
                     category = category,
                     acres = acres,
                     ratePerAcre = ratePerAcre,
+                    paidAmount = paidAmount,
                     location = location,
-                    status = status,
                     date = date,
                     notes = notes
                 )

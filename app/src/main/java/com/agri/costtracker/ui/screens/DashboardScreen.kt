@@ -531,12 +531,17 @@ fun DashboardScreen(
                                         color = Primary
                                     )
                                 )
+                                val (statusText, statusColor) = when (record.status) {
+                                    RecordStatus.COMPLETED -> Pair(strings.paid, Primary)
+                                    RecordStatus.PARTIAL -> Pair("${strings.partial} (₹${String.format(Locale.US, "%,.0f", record.paidAmount)})", Secondary)
+                                    else -> Pair(strings.unpaid, Secondary)
+                                }
                                 Text(
-                                    text = if (record.status == RecordStatus.INVOICED) strings.unpaid else strings.paid,
+                                    text = statusText,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (record.status == RecordStatus.INVOICED) Secondary else Primary
+                                        color = statusColor
                                     )
                                 )
                             }

@@ -8,6 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.agri.costtracker.data.model.ActivityRecord
 import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
+import com.agri.costtracker.data.model.PaymentRecord
 import com.agri.costtracker.data.model.RecordCategory
 import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.data.model.ServiceRates
@@ -16,8 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [Farmer::class, FarmerProfile::class, ServiceRates::class, ActivityRecord::class],
-    version = 2,
+    entities = [Farmer::class, FarmerProfile::class, ServiceRates::class, ActivityRecord::class, PaymentRecord::class],
+    version = 5,
     exportSchema = false
 )
 abstract class AgriDatabase : RoomDatabase() {
@@ -70,12 +71,12 @@ abstract class AgriDatabase : RoomDatabase() {
                 )
             )
 
-            // Initial Service Rates (Default Per-Acre charges)
+            // Initial Service Rates (Default Per-Acre charges in INR)
             dao.insertOrUpdateRates(
                 ServiceRates(
                     id = 1,
-                    sprayingRatePerAcre = 35.00, // Drone Spraying default rate
-                    cropCuttingRatePerAcre = 85.00, // Harvester/Cutting Machine default rate
+                    sprayingRatePerAcre = 450.00, // Drone Spraying default rate in ₹
+                    cropCuttingRatePerAcre = 1400.00, // Harvester default rate in ₹
                     globalTrendPercent = 4.2
                 )
             )
@@ -117,7 +118,7 @@ abstract class AgriDatabase : RoomDatabase() {
             )
             dao.insertAllFarmers(farmers)
 
-            // Initial Activity Records matching the rental business
+            // Initial Activity Records
             val records = listOf(
                 ActivityRecord(
                     id = 1,
@@ -128,8 +129,10 @@ abstract class AgriDatabase : RoomDatabase() {
                     date = "October 20, 2024",
                     location = "Green Valley Field A",
                     acres = 25.0,
-                    ratePerAcre = 35.00,
-                    cost = 875.00, // 25 * 35
+                    ratePerAcre = 450.00,
+                    cost = 11250.00, // 25 * 450
+                    paidAmount = 11250.00, // Fully Paid
+                    lastPaymentDate = "October 20, 2024",
                     status = RecordStatus.COMPLETED,
                     category = RecordCategory.SPRAYING,
                     season = "2024",
@@ -145,12 +148,14 @@ abstract class AgriDatabase : RoomDatabase() {
                     date = "October 18, 2024",
                     location = "East Ridge Plot 3",
                     acres = 40.0,
-                    ratePerAcre = 85.00,
-                    cost = 3400.00, // 40 * 85
-                    status = RecordStatus.INVOICED,
+                    ratePerAcre = 1400.00,
+                    cost = 56000.00, // 40 * 1400
+                    paidAmount = 20000.00, // Partial payment of 20k received
+                    lastPaymentDate = "October 18, 2024",
+                    status = RecordStatus.PARTIAL,
                     category = RecordCategory.HARVESTING,
                     season = "2024",
-                    notes = "Harvester deployed for 2 days",
+                    notes = "Advance payment received",
                     timestamp = 1729252800000L
                 ),
                 ActivityRecord(
@@ -162,12 +167,14 @@ abstract class AgriDatabase : RoomDatabase() {
                     date = "October 15, 2024",
                     location = "Kisan Nagar Sector 4",
                     acres = 60.0,
-                    ratePerAcre = 32.00, // custom discount rate
-                    cost = 1920.00,
+                    ratePerAcre = 420.00, // volume discount
+                    cost = 25200.00,
+                    paidAmount = 25200.00, // Fully Paid
+                    lastPaymentDate = "October 15, 2024",
                     status = RecordStatus.COMPLETED,
                     category = RecordCategory.SPRAYING,
                     season = "2024",
-                    notes = "Volume discount applied",
+                    notes = "Volume discount applied. Paid in cash",
                     timestamp = 1728993600000L
                 ),
                 ActivityRecord(
@@ -179,12 +186,14 @@ abstract class AgriDatabase : RoomDatabase() {
                     date = "October 10, 2024",
                     location = "Green Valley Field B",
                     acres = 20.0,
-                    ratePerAcre = 85.00,
-                    cost = 1700.00,
-                    status = RecordStatus.INVOICED,
+                    ratePerAcre = 1400.00,
+                    cost = 28000.00,
+                    paidAmount = 10000.00, // 2 installments: 4k on Oct 10, 6k on Oct 12
+                    lastPaymentDate = "October 12, 2024",
+                    status = RecordStatus.PARTIAL,
                     category = RecordCategory.HARVESTING,
                     season = "2024",
-                    notes = "Payment pending via UPI / Cash",
+                    notes = "Paid in 2 installments",
                     timestamp = 1728561600000L
                 ),
                 ActivityRecord(
@@ -196,16 +205,78 @@ abstract class AgriDatabase : RoomDatabase() {
                     date = "October 05, 2024",
                     location = "West Delta Sector 2",
                     acres = 35.0,
-                    ratePerAcre = 35.00,
-                    cost = 1225.00,
-                    status = RecordStatus.COMPLETED,
+                    ratePerAcre = 450.00,
+                    cost = 15750.00,
+                    paidAmount = 0.0, // Unpaid
+                    lastPaymentDate = "",
+                    status = RecordStatus.INVOICED,
                     category = RecordCategory.SPRAYING,
                     season = "2024",
-                    notes = "Completed in morning shift",
+                    notes = "Bill sent to client",
                     timestamp = 1728129600000L
                 )
             )
             dao.insertAllRecords(records)
+
+            // Seed Itemized Payment Records
+            val payments = listOf(
+                PaymentRecord(
+                    id = 1,
+                    recordId = 1,
+                    farmerId = 1,
+                    farmerName = "Ramesh Patel",
+                    amount = 11250.00,
+                    date = "October 20, 2024",
+                    paymentMode = "UPI",
+                    notes = "Full payment via PhonePe",
+                    timestamp = 1729425600000L
+                ),
+                PaymentRecord(
+                    id = 2,
+                    recordId = 2,
+                    farmerId = 2,
+                    farmerName = "Suresh Kumar",
+                    amount = 20000.00,
+                    date = "October 18, 2024",
+                    paymentMode = "Cash",
+                    notes = "Advance payment at field",
+                    timestamp = 1729252800000L
+                ),
+                PaymentRecord(
+                    id = 3,
+                    recordId = 3,
+                    farmerId = 3,
+                    farmerName = "Rajesh Singh",
+                    amount = 25200.00,
+                    date = "October 15, 2024",
+                    paymentMode = "Bank Transfer",
+                    notes = "Direct NEFT transfer",
+                    timestamp = 1728993600000L
+                ),
+                PaymentRecord(
+                    id = 4,
+                    recordId = 4,
+                    farmerId = 1,
+                    farmerName = "Ramesh Patel",
+                    amount = 4000.00,
+                    date = "October 10, 2024",
+                    paymentMode = "Cash",
+                    notes = "Advance payment at booking",
+                    timestamp = 1728561600000L
+                ),
+                PaymentRecord(
+                    id = 5,
+                    recordId = 4,
+                    farmerId = 1,
+                    farmerName = "Ramesh Patel",
+                    amount = 6000.00,
+                    date = "October 12, 2024",
+                    paymentMode = "UPI",
+                    notes = "Second installment via Google Pay",
+                    timestamp = 1728734400000L
+                )
+            )
+            dao.insertAllPayments(payments)
         }
     }
 }

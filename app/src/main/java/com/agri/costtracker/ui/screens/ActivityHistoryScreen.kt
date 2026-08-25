@@ -271,7 +271,8 @@ fun ActivityHistoryScreen(
                         onClick = {
                             val nextFilter = when (filterStatus) {
                                 null -> RecordStatus.INVOICED
-                                RecordStatus.INVOICED -> RecordStatus.COMPLETED
+                                RecordStatus.INVOICED -> RecordStatus.PARTIAL
+                                RecordStatus.PARTIAL -> RecordStatus.COMPLETED
                                 RecordStatus.COMPLETED -> RecordStatus.ARCHIVED
                                 RecordStatus.ARCHIVED -> null
                             }
@@ -283,9 +284,13 @@ fun ActivityHistoryScreen(
                         Icon(Icons.Outlined.FilterList, contentDescription = "Status", modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = filterStatus?.let {
-                                if (it == RecordStatus.INVOICED) strings.unpaidOnly else it.name
-                            } ?: strings.allStatus,
+                            text = when (filterStatus) {
+                                RecordStatus.INVOICED -> strings.unpaid
+                                RecordStatus.PARTIAL -> strings.partial
+                                RecordStatus.COMPLETED -> strings.paid
+                                RecordStatus.ARCHIVED -> "ARCHIVED"
+                                null -> strings.allStatus
+                            },
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -433,7 +438,7 @@ fun ActivityRecordItem(
                     ) {
                         StatusBadge(record.status, strings)
                         Text(
-                            text = "${record.date} • ${record.location}",
+                            text = "${record.date}${if (record.paidAmount > 0 && record.lastPaymentDate.isNotBlank()) " • Paid: ${record.lastPaymentDate}" else ""} • ${record.location}",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = Outline,
                                 fontSize = 10.sp
@@ -474,6 +479,7 @@ fun ActivityRecordItem(
 private fun StatusBadge(status: RecordStatus, strings: AppStrings) {
     val (bg, text, label) = when (status) {
         RecordStatus.COMPLETED -> Triple(GreenCardBadgeBg, GreenCardBadgeText, strings.paid)
+        RecordStatus.PARTIAL -> Triple(OrangeCardBadgeBg, OrangeCardBadgeText, strings.partial)
         RecordStatus.INVOICED -> Triple(OrangeCardBadgeBg, OrangeCardBadgeText, strings.unpaid)
         RecordStatus.ARCHIVED -> Triple(GrayCardBadgeBg, GrayCardBadgeText, "ARCHIVED")
     }

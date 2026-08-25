@@ -4,8 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 enum class RecordStatus {
-    COMPLETED,
-    INVOICED,
+    COMPLETED,  // Fully Paid
+    INVOICED,   // Unpaid
+    PARTIAL,    // Partially Paid
     ARCHIVED
 }
 
@@ -29,9 +30,11 @@ data class ActivityRecord(
     val date: String,
     val location: String,
     val cost: Double,
+    val paidAmount: Double = 0.0,
+    val lastPaymentDate: String = "",
     val acres: Double = 0.0,
     val ratePerAcre: Double = 0.0,
-    val status: RecordStatus = RecordStatus.COMPLETED,
+    val status: RecordStatus = RecordStatus.INVOICED,
     val category: RecordCategory = RecordCategory.SPRAYING,
     val season: String = "2024",
     val notes: String = "",

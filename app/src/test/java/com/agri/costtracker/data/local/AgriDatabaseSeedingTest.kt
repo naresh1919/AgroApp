@@ -28,11 +28,11 @@ class AgriDatabaseSeedingTest {
         assertNotNull(ramesh)
         assertEquals("9876543210", ramesh?.mobile)
 
-        // Verify seeded rates
+        // Verify seeded rates in INR
         val rates = fakeDao.getServiceRates().first()
         assertNotNull(rates)
-        assertEquals(35.0, rates?.sprayingRatePerAcre ?: 0.0, 0.001)
-        assertEquals(85.0, rates?.cropCuttingRatePerAcre ?: 0.0, 0.001)
+        assertEquals(450.0, rates?.sprayingRatePerAcre ?: 0.0, 0.001)
+        assertEquals(1400.0, rates?.cropCuttingRatePerAcre ?: 0.0, 0.001)
         assertEquals(4.2, rates?.globalTrendPercent ?: 0.0, 0.001)
 
         // Verify seeded records
@@ -40,6 +40,13 @@ class AgriDatabaseSeedingTest {
         assertTrue(records.isNotEmpty())
         val droneRecord = records.find { it.title.contains("Drone Spraying") }
         assertNotNull(droneRecord)
-        assertEquals(875.00, droneRecord?.cost ?: 0.0, 0.001)
+        assertEquals(11250.00, droneRecord?.cost ?: 0.0, 0.001)
+        assertEquals(11250.00, droneRecord?.paidAmount ?: 0.0, 0.001)
+
+        // Verify seeded payment installments
+        val payments = fakeDao.getAllPayments().first()
+        assertTrue(payments.isNotEmpty())
+        val rameshPayments = payments.filter { it.farmerName == "Ramesh Patel" }
+        assertEquals(3, rameshPayments.size) // 1 full payment + 2 installments for cutting
     }
 }

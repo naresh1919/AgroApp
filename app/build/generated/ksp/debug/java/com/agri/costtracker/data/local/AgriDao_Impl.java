@@ -15,6 +15,7 @@ import androidx.sqlite.db.SupportSQLiteStatement;
 import com.agri.costtracker.data.model.ActivityRecord;
 import com.agri.costtracker.data.model.Farmer;
 import com.agri.costtracker.data.model.FarmerProfile;
+import com.agri.costtracker.data.model.PaymentRecord;
 import com.agri.costtracker.data.model.RecordCategory;
 import com.agri.costtracker.data.model.RecordStatus;
 import com.agri.costtracker.data.model.ServiceRates;
@@ -48,9 +49,13 @@ public final class AgriDao_Impl implements AgriDao {
 
   private final EntityInsertionAdapter<ActivityRecord> __insertionAdapterOfActivityRecord;
 
+  private final EntityInsertionAdapter<PaymentRecord> __insertionAdapterOfPaymentRecord;
+
   private final EntityDeletionOrUpdateAdapter<Farmer> __deletionAdapterOfFarmer;
 
   private final EntityDeletionOrUpdateAdapter<ActivityRecord> __deletionAdapterOfActivityRecord;
+
+  private final EntityDeletionOrUpdateAdapter<PaymentRecord> __deletionAdapterOfPaymentRecord;
 
   private final EntityDeletionOrUpdateAdapter<Farmer> __updateAdapterOfFarmer;
 
@@ -118,7 +123,7 @@ public final class AgriDao_Impl implements AgriDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `activity_records` (`id`,`farmerId`,`farmerName`,`farmerMobile`,`title`,`date`,`location`,`cost`,`acres`,`ratePerAcre`,`status`,`category`,`season`,`notes`,`timestamp`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `activity_records` (`id`,`farmerId`,`farmerName`,`farmerMobile`,`title`,`date`,`location`,`cost`,`paidAmount`,`lastPaymentDate`,`acres`,`ratePerAcre`,`status`,`category`,`season`,`notes`,`timestamp`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -132,13 +137,36 @@ public final class AgriDao_Impl implements AgriDao {
         statement.bindString(6, entity.getDate());
         statement.bindString(7, entity.getLocation());
         statement.bindDouble(8, entity.getCost());
-        statement.bindDouble(9, entity.getAcres());
-        statement.bindDouble(10, entity.getRatePerAcre());
-        statement.bindString(11, __RecordStatus_enumToString(entity.getStatus()));
-        statement.bindString(12, __RecordCategory_enumToString(entity.getCategory()));
-        statement.bindString(13, entity.getSeason());
-        statement.bindString(14, entity.getNotes());
-        statement.bindLong(15, entity.getTimestamp());
+        statement.bindDouble(9, entity.getPaidAmount());
+        statement.bindString(10, entity.getLastPaymentDate());
+        statement.bindDouble(11, entity.getAcres());
+        statement.bindDouble(12, entity.getRatePerAcre());
+        statement.bindString(13, __RecordStatus_enumToString(entity.getStatus()));
+        statement.bindString(14, __RecordCategory_enumToString(entity.getCategory()));
+        statement.bindString(15, entity.getSeason());
+        statement.bindString(16, entity.getNotes());
+        statement.bindLong(17, entity.getTimestamp());
+      }
+    };
+    this.__insertionAdapterOfPaymentRecord = new EntityInsertionAdapter<PaymentRecord>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "INSERT OR REPLACE INTO `payment_records` (`id`,`recordId`,`farmerId`,`farmerName`,`amount`,`date`,`paymentMode`,`notes`,`timestamp`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?)";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final PaymentRecord entity) {
+        statement.bindLong(1, entity.getId());
+        statement.bindLong(2, entity.getRecordId());
+        statement.bindLong(3, entity.getFarmerId());
+        statement.bindString(4, entity.getFarmerName());
+        statement.bindDouble(5, entity.getAmount());
+        statement.bindString(6, entity.getDate());
+        statement.bindString(7, entity.getPaymentMode());
+        statement.bindString(8, entity.getNotes());
+        statement.bindLong(9, entity.getTimestamp());
       }
     };
     this.__deletionAdapterOfFarmer = new EntityDeletionOrUpdateAdapter<Farmer>(__db) {
@@ -164,6 +192,19 @@ public final class AgriDao_Impl implements AgriDao {
       @Override
       protected void bind(@NonNull final SupportSQLiteStatement statement,
           @NonNull final ActivityRecord entity) {
+        statement.bindLong(1, entity.getId());
+      }
+    };
+    this.__deletionAdapterOfPaymentRecord = new EntityDeletionOrUpdateAdapter<PaymentRecord>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "DELETE FROM `payment_records` WHERE `id` = ?";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final PaymentRecord entity) {
         statement.bindLong(1, entity.getId());
       }
     };
@@ -311,6 +352,44 @@ public final class AgriDao_Impl implements AgriDao {
   }
 
   @Override
+  public Object insertPayment(final PaymentRecord payment,
+      final Continuation<? super Long> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
+      @Override
+      @NonNull
+      public Long call() throws Exception {
+        __db.beginTransaction();
+        try {
+          final Long _result = __insertionAdapterOfPaymentRecord.insertAndReturnId(payment);
+          __db.setTransactionSuccessful();
+          return _result;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object insertAllPayments(final List<PaymentRecord> payments,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __insertionAdapterOfPaymentRecord.insert(payments);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object deleteFarmer(final Farmer farmer, final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
       @Override
@@ -338,6 +417,25 @@ public final class AgriDao_Impl implements AgriDao {
         __db.beginTransaction();
         try {
           __deletionAdapterOfActivityRecord.handle(record);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object deletePayment(final PaymentRecord payment,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __deletionAdapterOfPaymentRecord.handle(payment);
           __db.setTransactionSuccessful();
           return Unit.INSTANCE;
         } finally {
@@ -605,6 +703,8 @@ public final class AgriDao_Impl implements AgriDao {
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
           final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfPaidAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "paidAmount");
+          final int _cursorIndexOfLastPaymentDate = CursorUtil.getColumnIndexOrThrow(_cursor, "lastPaymentDate");
           final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
           final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
@@ -631,6 +731,10 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
             final double _tmpCost;
             _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpPaidAmount;
+            _tmpPaidAmount = _cursor.getDouble(_cursorIndexOfPaidAmount);
+            final String _tmpLastPaymentDate;
+            _tmpLastPaymentDate = _cursor.getString(_cursorIndexOfLastPaymentDate);
             final double _tmpAcres;
             _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
             final double _tmpRatePerAcre;
@@ -645,7 +749,7 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
             final long _tmpTimestamp;
             _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
-            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpPaidAmount,_tmpLastPaymentDate,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
             _result.add(_item);
           }
           return _result;
@@ -681,6 +785,8 @@ public final class AgriDao_Impl implements AgriDao {
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
           final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfPaidAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "paidAmount");
+          final int _cursorIndexOfLastPaymentDate = CursorUtil.getColumnIndexOrThrow(_cursor, "lastPaymentDate");
           final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
           final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
@@ -707,6 +813,10 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
             final double _tmpCost;
             _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpPaidAmount;
+            _tmpPaidAmount = _cursor.getDouble(_cursorIndexOfPaidAmount);
+            final String _tmpLastPaymentDate;
+            _tmpLastPaymentDate = _cursor.getString(_cursorIndexOfLastPaymentDate);
             final double _tmpAcres;
             _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
             final double _tmpRatePerAcre;
@@ -721,7 +831,7 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
             final long _tmpTimestamp;
             _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
-            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpPaidAmount,_tmpLastPaymentDate,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
             _result.add(_item);
           }
           return _result;
@@ -757,6 +867,8 @@ public final class AgriDao_Impl implements AgriDao {
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
           final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfPaidAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "paidAmount");
+          final int _cursorIndexOfLastPaymentDate = CursorUtil.getColumnIndexOrThrow(_cursor, "lastPaymentDate");
           final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
           final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
@@ -783,6 +895,10 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
             final double _tmpCost;
             _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpPaidAmount;
+            _tmpPaidAmount = _cursor.getDouble(_cursorIndexOfPaidAmount);
+            final String _tmpLastPaymentDate;
+            _tmpLastPaymentDate = _cursor.getString(_cursorIndexOfLastPaymentDate);
             final double _tmpAcres;
             _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
             final double _tmpRatePerAcre;
@@ -797,7 +913,7 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
             final long _tmpTimestamp;
             _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
-            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpPaidAmount,_tmpLastPaymentDate,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
             _result.add(_item);
           }
           return _result;
@@ -833,6 +949,8 @@ public final class AgriDao_Impl implements AgriDao {
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
           final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfPaidAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "paidAmount");
+          final int _cursorIndexOfLastPaymentDate = CursorUtil.getColumnIndexOrThrow(_cursor, "lastPaymentDate");
           final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
           final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
@@ -859,6 +977,10 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
             final double _tmpCost;
             _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpPaidAmount;
+            _tmpPaidAmount = _cursor.getDouble(_cursorIndexOfPaidAmount);
+            final String _tmpLastPaymentDate;
+            _tmpLastPaymentDate = _cursor.getString(_cursorIndexOfLastPaymentDate);
             final double _tmpAcres;
             _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
             final double _tmpRatePerAcre;
@@ -873,7 +995,179 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
             final long _tmpTimestamp;
             _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
-            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpPaidAmount,_tmpLastPaymentDate,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<PaymentRecord>> getAllPayments() {
+    final String _sql = "SELECT * FROM payment_records ORDER BY timestamp DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"payment_records"}, new Callable<List<PaymentRecord>>() {
+      @Override
+      @NonNull
+      public List<PaymentRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfRecordId = CursorUtil.getColumnIndexOrThrow(_cursor, "recordId");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "amount");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfPaymentMode = CursorUtil.getColumnIndexOrThrow(_cursor, "paymentMode");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<PaymentRecord> _result = new ArrayList<PaymentRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final PaymentRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpRecordId;
+            _tmpRecordId = _cursor.getLong(_cursorIndexOfRecordId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final double _tmpAmount;
+            _tmpAmount = _cursor.getDouble(_cursorIndexOfAmount);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpPaymentMode;
+            _tmpPaymentMode = _cursor.getString(_cursorIndexOfPaymentMode);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new PaymentRecord(_tmpId,_tmpRecordId,_tmpFarmerId,_tmpFarmerName,_tmpAmount,_tmpDate,_tmpPaymentMode,_tmpNotes,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<PaymentRecord>> getPaymentsByFarmer(final long farmerId) {
+    final String _sql = "SELECT * FROM payment_records WHERE farmerId = ? ORDER BY timestamp DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, farmerId);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"payment_records"}, new Callable<List<PaymentRecord>>() {
+      @Override
+      @NonNull
+      public List<PaymentRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfRecordId = CursorUtil.getColumnIndexOrThrow(_cursor, "recordId");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "amount");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfPaymentMode = CursorUtil.getColumnIndexOrThrow(_cursor, "paymentMode");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<PaymentRecord> _result = new ArrayList<PaymentRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final PaymentRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpRecordId;
+            _tmpRecordId = _cursor.getLong(_cursorIndexOfRecordId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final double _tmpAmount;
+            _tmpAmount = _cursor.getDouble(_cursorIndexOfAmount);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpPaymentMode;
+            _tmpPaymentMode = _cursor.getString(_cursorIndexOfPaymentMode);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new PaymentRecord(_tmpId,_tmpRecordId,_tmpFarmerId,_tmpFarmerName,_tmpAmount,_tmpDate,_tmpPaymentMode,_tmpNotes,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<PaymentRecord>> getPaymentsByRecord(final long recordId) {
+    final String _sql = "SELECT * FROM payment_records WHERE recordId = ? ORDER BY timestamp ASC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, recordId);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"payment_records"}, new Callable<List<PaymentRecord>>() {
+      @Override
+      @NonNull
+      public List<PaymentRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfRecordId = CursorUtil.getColumnIndexOrThrow(_cursor, "recordId");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "amount");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfPaymentMode = CursorUtil.getColumnIndexOrThrow(_cursor, "paymentMode");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<PaymentRecord> _result = new ArrayList<PaymentRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final PaymentRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpRecordId;
+            _tmpRecordId = _cursor.getLong(_cursorIndexOfRecordId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final double _tmpAmount;
+            _tmpAmount = _cursor.getDouble(_cursorIndexOfAmount);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpPaymentMode;
+            _tmpPaymentMode = _cursor.getString(_cursorIndexOfPaymentMode);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new PaymentRecord(_tmpId,_tmpRecordId,_tmpFarmerId,_tmpFarmerName,_tmpAmount,_tmpDate,_tmpPaymentMode,_tmpNotes,_tmpTimestamp);
             _result.add(_item);
           }
           return _result;
@@ -898,6 +1192,7 @@ public final class AgriDao_Impl implements AgriDao {
     switch (_value) {
       case COMPLETED: return "COMPLETED";
       case INVOICED: return "INVOICED";
+      case PARTIAL: return "PARTIAL";
       case ARCHIVED: return "ARCHIVED";
       default: throw new IllegalArgumentException("Can't convert enum to string, unknown enum value: " + _value);
     }
@@ -920,6 +1215,7 @@ public final class AgriDao_Impl implements AgriDao {
     switch (_value) {
       case "COMPLETED": return RecordStatus.COMPLETED;
       case "INVOICED": return RecordStatus.INVOICED;
+      case "PARTIAL": return RecordStatus.PARTIAL;
       case "ARCHIVED": return RecordStatus.ARCHIVED;
       default: throw new IllegalArgumentException("Can't convert value to enum, unknown value: " + _value);
     }

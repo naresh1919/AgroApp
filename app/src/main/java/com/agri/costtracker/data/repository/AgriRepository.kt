@@ -4,6 +4,7 @@ import com.agri.costtracker.data.local.AgriDao
 import com.agri.costtracker.data.model.ActivityRecord
 import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
+import com.agri.costtracker.data.model.PaymentRecord
 import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.data.model.ServiceRates
 import kotlinx.coroutines.flow.Flow
@@ -52,5 +53,24 @@ class AgriRepository(private val dao: AgriDao) {
 
     suspend fun deleteRecord(record: ActivityRecord) {
         dao.deleteRecord(record)
+    }
+
+    // Individual Payment Records / Installments
+    val allPaymentsFlow: Flow<List<PaymentRecord>> = dao.getAllPayments()
+
+    fun getPaymentsByFarmer(farmerId: Long): Flow<List<PaymentRecord>> {
+        return dao.getPaymentsByFarmer(farmerId)
+    }
+
+    fun getPaymentsByRecord(recordId: Long): Flow<List<PaymentRecord>> {
+        return dao.getPaymentsByRecord(recordId)
+    }
+
+    suspend fun addPayment(payment: PaymentRecord): Long {
+        return dao.insertPayment(payment)
+    }
+
+    suspend fun deletePayment(payment: PaymentRecord) {
+        dao.deletePayment(payment)
     }
 }

@@ -21,11 +21,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.RecordCategory
-import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.data.model.ServiceRates
 import com.agri.costtracker.ui.localization.AppStrings
 import com.agri.costtracker.ui.theme.*
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -45,8 +43,8 @@ fun AddActivityDialog(
         category: RecordCategory,
         acres: Double,
         ratePerAcre: Double,
+        paidAmount: Double,
         location: String,
-        status: RecordStatus,
         date: String,
         notes: String
     ) -> Unit
@@ -59,11 +57,13 @@ fun AddActivityDialog(
     val defaultRate = when (selectedCategory) {
         RecordCategory.SPRAYING -> rates.sprayingRatePerAcre
         RecordCategory.HARVESTING -> rates.cropCuttingRatePerAcre
-        else -> 35.0
+        else -> 450.0
     }
     var rateInput by remember(selectedCategory) {
         mutableStateOf(String.format(Locale.US, "%.2f", defaultRate))
     }
+
+    var advancePaidInput by remember { mutableStateOf("") }
 
     val todayFormatted = remember {
         val sdf = SimpleDateFormat("MMMM dd, yyyy", Locale.US)
@@ -82,7 +82,6 @@ fun AddActivityDialog(
             }
         )
     }
-    var selectedStatus by remember { mutableStateOf(RecordStatus.INVOICED) }
     var notes by remember { mutableStateOf("") }
 
     var expandedFarmerDropdown by remember { mutableStateOf(false) }
@@ -91,6 +90,8 @@ fun AddActivityDialog(
     val acres = acresInput.toDoubleOrNull() ?: 0.0
     val rate = rateInput.toDoubleOrNull() ?: 0.0
     val calculatedTotal = acres * rate
+    val advancePaid = advancePaidInput.toDoubleOrNull() ?: 0.0
+    val remainingBalance = (calculatedTotal - advancePaid).coerceAtLeast(0.0)
 
     val scrollState = rememberScrollState()
 
@@ -290,44 +291,80 @@ fun AddActivityDialog(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Partial / Advance Payment Field
+                OutlinedTextField(
+                    value = advancePaidInput,
+                    onValueChange = { advancePaidInput = it },
+                    label = { Text(strings.advancePaidOptional) },
+                    placeholder = { Text("0.00") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Live Cost Calculation Banner
+                // Live Cost Calculation Banner with Balance
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = SurfaceContainerHigh)
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 text = strings.calculatedTotalBill,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Outline
-                                )
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Outline)
                             )
                             Text(
-                                text = "${acres} ${strings.acres} × ₹${rateInput.ifEmpty { "0" }} / ${strings.acres}",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = OnSurfaceVariant
-                                )
+                                text = "₹${String.format(Locale.US, "%,.2f", calculatedTotal)}",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black, color = Primary)
                             )
                         }
-                        Text(
-                            text = "₹${String.format(Locale.US, "%,.2f", calculatedTotal)}",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Black,
-                                color = Primary
-                            )
-                        )
+
+                        if (advancePaid > 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = strings.amountPaidLabel,
+                                    style = MaterialTheme.typography.bodySmall.copy(color = Primary)
+                                )
+                                Text(
+                                    text = "₹${String.format(Locale.US, "%,.2f", advancePaid)}",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = Primary)
+                                )
+                            }
+                            HorizontalDivider(color = OutlineVariant.copy(alpha = 0.5f))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = strings.remainingBalance,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Secondary)
+                                )
+                                Text(
+                                    text = "₹${String.format(Locale.US, "%,.2f", remainingBalance)}",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Black, color = Secondary)
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -345,42 +382,6 @@ fun AddActivityDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp)
                 )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Payment Status
-                Text(
-                    text = strings.paymentStatus,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Outline
-                    )
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    RecordStatus.values().forEach { status ->
-                        val selected = selectedStatus == status
-                        FilterChip(
-                            selected = selected,
-                            onClick = { selectedStatus = status },
-                            label = {
-                                Text(
-                                    text = when (status) {
-                                        RecordStatus.INVOICED -> strings.unpaid
-                                        RecordStatus.COMPLETED -> strings.paid
-                                        RecordStatus.ARCHIVED -> "Archived"
-                                    },
-                                    fontSize = 10.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        )
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -401,8 +402,8 @@ fun AddActivityDialog(
                                 selectedCategory,
                                 acres,
                                 rate,
+                                advancePaid,
                                 location,
-                                selectedStatus,
                                 date,
                                 notes
                             )
