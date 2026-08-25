@@ -1,6 +1,7 @@
 package com.agri.costtracker.data.local
 
 import com.agri.costtracker.data.model.ActivityRecord
+import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
 import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.data.model.ServiceRates
@@ -11,10 +12,51 @@ import kotlinx.coroutines.flow.map
 
 class FakeAgriDao : AgriDao {
 
+    private val _farmersFlow = MutableStateFlow<List<Farmer>>(emptyList())
     private val _profileFlow = MutableStateFlow<FarmerProfile?>(null)
     private val _ratesFlow = MutableStateFlow<ServiceRates?>(null)
     private val _recordsFlow = MutableStateFlow<List<ActivityRecord>>(emptyList())
     private var nextRecordId: Long = 1L
+    private var nextFarmerId: Long = 1L
+
+    override fun getAllFarmers(): Flow<List<Farmer>> = _farmersFlow.asStateFlow()
+
+    override fun getFarmerById(id: Long): Flow<Farmer?> = _farmersFlow.map { list ->
+        list.find { it.id == id }
+    }
+
+    override suspend fun insertFarmer(farmer: Farmer): Long {
+        val idToUse = if (farmer.id == 0L) nextFarmerId++ else farmer.id
+        val farmerToInsert = farmer.copy(id = idToUse)
+        val current = _farmersFlow.value.toMutableList()
+        val index = current.indexOfFirst { it.id == idToUse }
+        if (index >= 0) {
+            current[index] = farmerToInsert
+        } else {
+            current.add(0, farmerToInsert)
+        }
+        _farmersFlow.value = current
+        return idToUse
+    }
+
+    override suspend fun insertAllFarmers(farmers: List<Farmer>) {
+        farmers.forEach { insertFarmer(it) }
+    }
+
+    override suspend fun updateFarmer(farmer: Farmer) {
+        val current = _farmersFlow.value.toMutableList()
+        val index = current.indexOfFirst { it.id == farmer.id }
+        if (index >= 0) {
+            current[index] = farmer
+            _farmersFlow.value = current
+        }
+    }
+
+    override suspend fun deleteFarmer(farmer: Farmer) {
+        val current = _farmersFlow.value.toMutableList()
+        current.removeAll { it.id == farmer.id }
+        _farmersFlow.value = current
+    }
 
     override fun getFarmerProfile(): Flow<FarmerProfile?> = _profileFlow.asStateFlow()
 
@@ -29,6 +71,12 @@ class FakeAgriDao : AgriDao {
     }
 
     override fun getAllRecords(): Flow<List<ActivityRecord>> = _recordsFlow.asStateFlow()
+
+    override fun getRecordsByFarmer(farmerId: Long): Flow<List<ActivityRecord>> {
+        return _recordsFlow.map { list ->
+            list.filter { it.farmerId == farmerId }
+        }
+    }
 
     override fun getRecordsBySeason(season: String): Flow<List<ActivityRecord>> {
         return _recordsFlow.map { list ->
@@ -50,7 +98,7 @@ class FakeAgriDao : AgriDao {
         if (index >= 0) {
             current[index] = recordToInsert
         } else {
-            current.add(0, recordToInsert) // ordered descending by timestamp
+            current.add(0, recordToInsert)
         }
         _recordsFlow.value = current
         return idToUse

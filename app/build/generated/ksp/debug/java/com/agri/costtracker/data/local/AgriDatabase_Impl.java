@@ -31,18 +31,20 @@ public final class AgriDatabase_Impl extends AgriDatabase {
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(1) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(2) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS `farmers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `mobile` TEXT NOT NULL, `village` TEXT NOT NULL, `totalAcres` REAL NOT NULL, `notes` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `farmer_profile` (`id` INTEGER NOT NULL, `fullName` TEXT NOT NULL, `totalOwnedAcres` REAL NOT NULL, `cultivatedAcres` REAL NOT NULL, `fallowAcres` REAL NOT NULL, `sector` TEXT NOT NULL, `region` TEXT NOT NULL, `avatarUrl` TEXT NOT NULL, PRIMARY KEY(`id`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `service_rates` (`id` INTEGER NOT NULL, `sprayingRatePerAcre` REAL NOT NULL, `cropCuttingRatePerAcre` REAL NOT NULL, `globalTrendPercent` REAL NOT NULL, `lastUpdated` INTEGER NOT NULL, PRIMARY KEY(`id`))");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `activity_records` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `date` TEXT NOT NULL, `location` TEXT NOT NULL, `cost` REAL NOT NULL, `status` TEXT NOT NULL, `category` TEXT NOT NULL, `season` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `activity_records` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `farmerId` INTEGER NOT NULL, `farmerName` TEXT NOT NULL, `farmerMobile` TEXT NOT NULL, `title` TEXT NOT NULL, `date` TEXT NOT NULL, `location` TEXT NOT NULL, `cost` REAL NOT NULL, `acres` REAL NOT NULL, `ratePerAcre` REAL NOT NULL, `status` TEXT NOT NULL, `category` TEXT NOT NULL, `season` TEXT NOT NULL, `notes` TEXT NOT NULL, `timestamp` INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '805be37192469d27bd89e612814b9bc8')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bf3b662ce0b6519c00b94eb68d3b6f8c')");
       }
 
       @Override
       public void dropAllTables(@NonNull final SupportSQLiteDatabase db) {
+        db.execSQL("DROP TABLE IF EXISTS `farmers`");
         db.execSQL("DROP TABLE IF EXISTS `farmer_profile`");
         db.execSQL("DROP TABLE IF EXISTS `service_rates`");
         db.execSQL("DROP TABLE IF EXISTS `activity_records`");
@@ -89,6 +91,23 @@ public final class AgriDatabase_Impl extends AgriDatabase {
       @NonNull
       public RoomOpenHelper.ValidationResult onValidateSchema(
           @NonNull final SupportSQLiteDatabase db) {
+        final HashMap<String, TableInfo.Column> _columnsFarmers = new HashMap<String, TableInfo.Column>(7);
+        _columnsFarmers.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFarmers.put("name", new TableInfo.Column("name", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFarmers.put("mobile", new TableInfo.Column("mobile", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFarmers.put("village", new TableInfo.Column("village", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFarmers.put("totalAcres", new TableInfo.Column("totalAcres", "REAL", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFarmers.put("notes", new TableInfo.Column("notes", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsFarmers.put("createdAt", new TableInfo.Column("createdAt", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        final HashSet<TableInfo.ForeignKey> _foreignKeysFarmers = new HashSet<TableInfo.ForeignKey>(0);
+        final HashSet<TableInfo.Index> _indicesFarmers = new HashSet<TableInfo.Index>(0);
+        final TableInfo _infoFarmers = new TableInfo("farmers", _columnsFarmers, _foreignKeysFarmers, _indicesFarmers);
+        final TableInfo _existingFarmers = TableInfo.read(db, "farmers");
+        if (!_infoFarmers.equals(_existingFarmers)) {
+          return new RoomOpenHelper.ValidationResult(false, "farmers(com.agri.costtracker.data.model.Farmer).\n"
+                  + " Expected:\n" + _infoFarmers + "\n"
+                  + " Found:\n" + _existingFarmers);
+        }
         final HashMap<String, TableInfo.Column> _columnsFarmerProfile = new HashMap<String, TableInfo.Column>(8);
         _columnsFarmerProfile.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsFarmerProfile.put("fullName", new TableInfo.Column("fullName", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -122,15 +141,21 @@ public final class AgriDatabase_Impl extends AgriDatabase {
                   + " Expected:\n" + _infoServiceRates + "\n"
                   + " Found:\n" + _existingServiceRates);
         }
-        final HashMap<String, TableInfo.Column> _columnsActivityRecords = new HashMap<String, TableInfo.Column>(9);
+        final HashMap<String, TableInfo.Column> _columnsActivityRecords = new HashMap<String, TableInfo.Column>(15);
         _columnsActivityRecords.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsActivityRecords.put("farmerId", new TableInfo.Column("farmerId", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsActivityRecords.put("farmerName", new TableInfo.Column("farmerName", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsActivityRecords.put("farmerMobile", new TableInfo.Column("farmerMobile", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("title", new TableInfo.Column("title", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("date", new TableInfo.Column("date", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("location", new TableInfo.Column("location", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("cost", new TableInfo.Column("cost", "REAL", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsActivityRecords.put("acres", new TableInfo.Column("acres", "REAL", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsActivityRecords.put("ratePerAcre", new TableInfo.Column("ratePerAcre", "REAL", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("status", new TableInfo.Column("status", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("category", new TableInfo.Column("category", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("season", new TableInfo.Column("season", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsActivityRecords.put("notes", new TableInfo.Column("notes", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsActivityRecords.put("timestamp", new TableInfo.Column("timestamp", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysActivityRecords = new HashSet<TableInfo.ForeignKey>(0);
         final HashSet<TableInfo.Index> _indicesActivityRecords = new HashSet<TableInfo.Index>(0);
@@ -143,7 +168,7 @@ public final class AgriDatabase_Impl extends AgriDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "805be37192469d27bd89e612814b9bc8", "5b64b66896c45f884bd690785b4c5e24");
+    }, "bf3b662ce0b6519c00b94eb68d3b6f8c", "0a8f54cf2d64b88322926a348ac16879");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
@@ -154,7 +179,7 @@ public final class AgriDatabase_Impl extends AgriDatabase {
   protected InvalidationTracker createInvalidationTracker() {
     final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);
     final HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);
-    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "farmer_profile","service_rates","activity_records");
+    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, "farmers","farmer_profile","service_rates","activity_records");
   }
 
   @Override
@@ -163,6 +188,7 @@ public final class AgriDatabase_Impl extends AgriDatabase {
     final SupportSQLiteDatabase _db = super.getOpenHelper().getWritableDatabase();
     try {
       super.beginTransaction();
+      _db.execSQL("DELETE FROM `farmers`");
       _db.execSQL("DELETE FROM `farmer_profile`");
       _db.execSQL("DELETE FROM `service_rates`");
       _db.execSQL("DELETE FROM `activity_records`");

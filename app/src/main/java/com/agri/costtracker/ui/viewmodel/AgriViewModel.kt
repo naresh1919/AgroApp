@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.agri.costtracker.data.model.ActivityRecord
+import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
 import com.agri.costtracker.data.model.RecordCategory
 import com.agri.costtracker.data.model.RecordStatus
@@ -13,19 +14,26 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class DashboardMetrics(
-    val totalAcres: Double = 1240.0,
-    val cultivatedAcres: Double = 842.0,
-    val fallowAcres: Double = 398.0,
-    val sprayingRate: Double = 34.0,
+    val totalRevenue: Double = 9120.0,
+    val pendingPayables: Double = 5100.0,
+    val totalSprayingAcres: Double = 120.0,
+    val totalCuttingAcres: Double = 60.0,
+    val totalAcresServed: Double = 180.0,
+    val sprayingRate: Double = 35.0,
     val cropCuttingRate: Double = 85.0,
-    val estimatedSprayingCost: Double = 42160.0,
-    val estimatedHarvestingCost: Double = 105400.0,
-    val totalSeasonalInvestment: Double = 142850.0,
-    val pendingPayables: Double = 4210.0,
-    val recordsCount: Int = 42
+    val farmersCount: Int = 4,
+    val recordsCount: Int = 5
 )
 
 class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
+
+    // Farmers State
+    val allFarmers: StateFlow<List<Farmer>> = repository.allFarmersFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val profile: StateFlow<FarmerProfile> = repository.profileFlow
         .filterNotNull()
@@ -53,19 +61,34 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
     private val _filterStatus = MutableStateFlow<RecordStatus?>(null)
     val filterStatus: StateFlow<RecordStatus?> = _filterStatus.asStateFlow()
 
+    private val _filterFarmerId = MutableStateFlow<Long?>(null)
+    val filterFarmerId: StateFlow<Long?> = _filterFarmerId.asStateFlow()
+
     private val _selectedSeason = MutableStateFlow("2024")
     val selectedSeason: StateFlow<String> = _selectedSeason.asStateFlow()
 
-    // Filtered records based on season and status
+    private val _selectedLanguage = MutableStateFlow(com.agri.costtracker.ui.localization.AppLanguage.ENGLISH)
+    val selectedLanguage: StateFlow<com.agri.costtracker.ui.localization.AppLanguage> = _selectedLanguage.asStateFlow()
+
+    fun setLanguage(language: com.agri.costtracker.ui.localization.AppLanguage) {
+        _selectedLanguage.value = language
+    }
+
+    private val _selectedFarmerForStatement = MutableStateFlow<Farmer?>(null)
+    val selectedFarmerForStatement: StateFlow<Farmer?> = _selectedFarmerForStatement.asStateFlow()
+
+    // Filtered records based on season, status, and farmer
     val filteredRecords: StateFlow<List<ActivityRecord>> = combine(
         allRecords,
         _filterStatus,
+        _filterFarmerId,
         _selectedSeason
-    ) { records, status, season ->
+    ) { records, status, farmerId, season ->
         records.filter { record ->
             val matchSeason = season.isEmpty() || record.season == season
             val matchStatus = status == null || record.status == status
-            matchSeason && matchStatus
+            val matchFarmer = farmerId == null || record.farmerId == farmerId
+            matchSeason && matchStatus && matchFarmer
         }
     }.stateIn(
         scope = viewModelScope,
@@ -73,31 +96,29 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
         initialValue = emptyList()
     )
 
-    // Dynamic Dashboard Metrics
+    // Dynamic Business Dashboard Metrics
     val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
-        profile,
+        allFarmers,
         rates,
         allRecords
-    ) { prof, rts, records ->
-        val totalAcres = prof.totalOwnedAcres
-        val sprayingCost = totalAcres * rts.sprayingRatePerAcre
-        val harvestingCost = totalAcres * rts.cropCuttingRatePerAcre
-
+    ) { farmers, rts, records ->
         val activeSeasonRecords = records.filter { it.season == "2024" }
-        val totalInvestment = activeSeasonRecords.sumOf { it.cost }
-        val pendingPayables = activeSeasonRecords.filter { it.status == RecordStatus.INVOICED }.sumOf { it.cost }
+        val totalRev = activeSeasonRecords.sumOf { it.cost }
+        val pending = activeSeasonRecords.filter { it.status == RecordStatus.INVOICED }.sumOf { it.cost }
+        val sprayAcres = activeSeasonRecords.filter { it.category == RecordCategory.SPRAYING }.sumOf { it.acres }
+        val cuttingAcres = activeSeasonRecords.filter { it.category == RecordCategory.HARVESTING }.sumOf { it.acres }
+        val totalAcres = activeSeasonRecords.sumOf { it.acres }
 
         DashboardMetrics(
-            totalAcres = totalAcres,
-            cultivatedAcres = prof.cultivatedAcres,
-            fallowAcres = prof.fallowAcres,
+            totalRevenue = totalRev,
+            pendingPayables = pending,
+            totalSprayingAcres = sprayAcres,
+            totalCuttingAcres = cuttingAcres,
+            totalAcresServed = totalAcres,
             sprayingRate = rts.sprayingRatePerAcre,
             cropCuttingRate = rts.cropCuttingRatePerAcre,
-            estimatedSprayingCost = sprayingCost,
-            estimatedHarvestingCost = harvestingCost,
-            totalSeasonalInvestment = if (totalInvestment > 0) totalInvestment else 142850.0,
-            pendingPayables = if (pendingPayables > 0) pendingPayables else 4210.0,
-            recordsCount = if (activeSeasonRecords.isNotEmpty()) activeSeasonRecords.size else 42
+            farmersCount = farmers.size,
+            recordsCount = activeSeasonRecords.size
         )
     }.stateIn(
         scope = viewModelScope,
@@ -105,27 +126,56 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
         initialValue = DashboardMetrics()
     )
 
-    fun saveProfile(
-        fullName: String,
-        totalOwnedAcres: Double,
-        cultivatedAcres: Double? = null,
-        fallowAcres: Double? = null,
-        sector: String = "Central Valley Sector 7"
+    // Farmer Operations
+    fun addFarmer(
+        name: String,
+        mobile: String,
+        village: String = "",
+        totalAcres: Double = 0.0,
+        notes: String = ""
     ) {
         viewModelScope.launch {
-            val cult = cultivatedAcres ?: (totalOwnedAcres * 0.68)
-            val fall = fallowAcres ?: (totalOwnedAcres - cult)
-            val updated = profile.value.copy(
-                fullName = fullName,
-                totalOwnedAcres = totalOwnedAcres,
-                cultivatedAcres = cult,
-                fallowAcres = fall,
-                sector = sector
+            val newFarmer = Farmer(
+                name = name.trim(),
+                mobile = mobile.trim(),
+                village = village.trim(),
+                totalAcres = totalAcres,
+                notes = notes.trim(),
+                createdAt = System.currentTimeMillis()
             )
-            repository.updateProfile(updated)
+            repository.addFarmer(newFarmer)
         }
     }
 
+    fun updateFarmer(farmer: Farmer) {
+        viewModelScope.launch {
+            repository.updateFarmer(farmer)
+        }
+    }
+
+    fun deleteFarmer(farmer: Farmer) {
+        viewModelScope.launch {
+            repository.deleteFarmer(farmer)
+        }
+    }
+
+    fun selectFarmerForStatement(farmer: Farmer?) {
+        _selectedFarmerForStatement.value = farmer
+    }
+
+    fun setFilterFarmerId(farmerId: Long?) {
+        _filterFarmerId.value = farmerId
+    }
+
+    fun setFilterStatus(status: RecordStatus?) {
+        _filterStatus.value = status
+    }
+
+    fun setSeason(season: String) {
+        _selectedSeason.value = season
+    }
+
+    // Service Rates Operations
     fun saveRates(
         sprayingRate: Double,
         cropCuttingRate: Double
@@ -140,24 +190,37 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
         }
     }
 
-    fun addRecord(
+    // Service Booking / Activity Records
+    fun addServiceRecord(
+        farmerId: Long,
+        farmerName: String,
+        farmerMobile: String,
         title: String,
         category: RecordCategory,
-        cost: Double,
+        acres: Double,
+        ratePerAcre: Double,
         location: String,
         status: RecordStatus,
         date: String = "Today",
-        season: String = "2024"
+        season: String = "2024",
+        notes: String = ""
     ) {
         viewModelScope.launch {
+            val calculatedCost = acres * ratePerAcre
             val record = ActivityRecord(
+                farmerId = farmerId,
+                farmerName = farmerName,
+                farmerMobile = farmerMobile,
                 title = title,
                 category = category,
-                cost = cost,
+                acres = acres,
+                ratePerAcre = ratePerAcre,
+                cost = calculatedCost,
                 location = location,
                 status = status,
                 date = date,
                 season = season,
+                notes = notes,
                 timestamp = System.currentTimeMillis()
             )
             repository.addRecord(record)
@@ -168,14 +231,6 @@ class AgriViewModel(private val repository: AgriRepository) : ViewModel() {
         viewModelScope.launch {
             repository.deleteRecord(record)
         }
-    }
-
-    fun setFilterStatus(status: RecordStatus?) {
-        _filterStatus.value = status
-    }
-
-    fun setSeason(season: String) {
-        _selectedSeason.value = season
     }
 }
 

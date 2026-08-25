@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.agri.costtracker.data.model.ActivityRecord
+import com.agri.costtracker.data.model.Farmer
 import com.agri.costtracker.data.model.FarmerProfile
 import com.agri.costtracker.data.model.RecordCategory
 import com.agri.costtracker.data.model.RecordStatus
@@ -16,8 +16,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [FarmerProfile::class, ServiceRates::class, ActivityRecord::class],
-    version = 1,
+    entities = [Farmer::class, FarmerProfile::class, ServiceRates::class, ActivityRecord::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AgriDatabase : RoomDatabase() {
@@ -35,6 +35,7 @@ abstract class AgriDatabase : RoomDatabase() {
                     AgriDatabase::class.java,
                     "agri_cost_tracker_db"
                 )
+                .fallbackToDestructiveMigration()
                 .addCallback(DatabaseCallback(scope))
                 .build()
                 INSTANCE = instance
@@ -56,90 +57,152 @@ abstract class AgriDatabase : RoomDatabase() {
         }
 
         suspend fun seedInitialData(dao: AgriDao) {
-            // Initial Profile
+            // Initial Business / Operator Profile
             dao.insertOrUpdateProfile(
                 FarmerProfile(
                     id = 1,
-                    fullName = "Elias Thorne",
-                    totalOwnedAcres = 1240.0,
-                    cultivatedAcres = 842.0,
-                    fallowAcres = 398.0,
-                    sector = "Central Valley Sector 7",
+                    fullName = "AgriTech Drone & Machinery Services",
+                    totalOwnedAcres = 3500.0,
+                    cultivatedAcres = 2800.0,
+                    fallowAcres = 700.0,
+                    sector = "District Central Agro Hub",
                     region = "Central Plains"
                 )
             )
 
-            // Initial Rates
+            // Initial Service Rates (Default Per-Acre charges)
             dao.insertOrUpdateRates(
                 ServiceRates(
                     id = 1,
-                    sprayingRatePerAcre = 34.00,
-                    cropCuttingRatePerAcre = 85.00,
+                    sprayingRatePerAcre = 35.00, // Drone Spraying default rate
+                    cropCuttingRatePerAcre = 85.00, // Harvester/Cutting Machine default rate
                     globalTrendPercent = 4.2
                 )
             )
 
-            // Initial Activity Records matching design
+            // Seed Initial Registered Farmers
+            val farmers = listOf(
+                Farmer(
+                    id = 1,
+                    name = "Ramesh Patel",
+                    mobile = "9876543210",
+                    village = "Green Valley, North Sector",
+                    totalAcres = 45.0,
+                    notes = "Regular customer for Drone spraying (Paddy & Cotton)"
+                ),
+                Farmer(
+                    id = 2,
+                    name = "Suresh Kumar",
+                    mobile = "9812345678",
+                    village = "East Ridge Village",
+                    totalAcres = 80.0,
+                    notes = "Requires Harvester and Drone Spraying"
+                ),
+                Farmer(
+                    id = 3,
+                    name = "Rajesh Singh",
+                    mobile = "9765432109",
+                    village = "Kisan Nagar, Sector 4",
+                    totalAcres = 120.0,
+                    notes = "Large farm - Maize and Wheat cultivation"
+                ),
+                Farmer(
+                    id = 4,
+                    name = "Vikram Sharma",
+                    mobile = "9898765432",
+                    village = "West Delta Field Zone",
+                    totalAcres = 35.0,
+                    notes = "Prefers automated Drone fertilizer application"
+                )
+            )
+            dao.insertAllFarmers(farmers)
+
+            // Initial Activity Records matching the rental business
             val records = listOf(
                 ActivityRecord(
-                    title = "Soil Analysis & Fertilization",
-                    date = "March 14, 2024",
-                    location = "North Acre Ridge Field",
-                    cost = 12450.00,
+                    id = 1,
+                    farmerId = 1,
+                    farmerName = "Ramesh Patel",
+                    farmerMobile = "9876543210",
+                    title = "Drone Spraying - Pesticide Application",
+                    date = "October 20, 2024",
+                    location = "Green Valley Field A",
+                    acres = 25.0,
+                    ratePerAcre = 35.00,
+                    cost = 875.00, // 25 * 35
                     status = RecordStatus.COMPLETED,
-                    category = RecordCategory.LAND,
-                    season = "2024",
-                    timestamp = 1710374400000L
-                ),
-                ActivityRecord(
-                    title = "Seed Procurement - Maize",
-                    date = "March 08, 2024",
-                    location = "Seasonal Supply Order",
-                    cost = 45200.00,
-                    status = RecordStatus.INVOICED,
-                    category = RecordCategory.SEEDS,
-                    season = "2024",
-                    timestamp = 1709856000000L
-                ),
-                ActivityRecord(
-                    title = "Equipment Maintenance",
-                    date = "February 22, 2024",
-                    location = "Fleet Service Center",
-                    cost = 2180.50,
-                    status = RecordStatus.ARCHIVED,
-                    category = RecordCategory.MAINTENANCE,
-                    season = "2024",
-                    timestamp = 1708560000000L
-                ),
-                ActivityRecord(
-                    title = "Irrigation System Upgrade",
-                    date = "February 15, 2024",
-                    location = "South Reservoir Link",
-                    cost = 18900.00,
-                    status = RecordStatus.COMPLETED,
-                    category = RecordCategory.IRRIGATION,
-                    season = "2024",
-                    timestamp = 1707955200000L
-                ),
-                ActivityRecord(
-                    title = "Selective Herbicide Application",
-                    date = "January 28, 2024",
-                    location = "East Delta Sector 3",
-                    cost = 4210.00,
-                    status = RecordStatus.INVOICED,
                     category = RecordCategory.SPRAYING,
                     season = "2024",
-                    timestamp = 1706400000000L
+                    notes = "Full spray completed on Cotton field",
+                    timestamp = 1729425600000L
                 ),
                 ActivityRecord(
-                    title = "Deep Tillage & Furrowing",
-                    date = "January 10, 2024",
-                    location = "West Boundary Fields",
-                    cost = 59909.50,
-                    status = RecordStatus.COMPLETED,
-                    category = RecordCategory.LAND,
+                    id = 2,
+                    farmerId = 2,
+                    farmerName = "Suresh Kumar",
+                    farmerMobile = "9812345678",
+                    title = "Cutting Machine - Wheat Harvesting",
+                    date = "October 18, 2024",
+                    location = "East Ridge Plot 3",
+                    acres = 40.0,
+                    ratePerAcre = 85.00,
+                    cost = 3400.00, // 40 * 85
+                    status = RecordStatus.INVOICED,
+                    category = RecordCategory.HARVESTING,
                     season = "2024",
-                    timestamp = 1704844800000L
+                    notes = "Harvester deployed for 2 days",
+                    timestamp = 1729252800000L
+                ),
+                ActivityRecord(
+                    id = 3,
+                    farmerId = 3,
+                    farmerName = "Rajesh Singh",
+                    farmerMobile = "9765432109",
+                    title = "Drone Fertilizer Spraying",
+                    date = "October 15, 2024",
+                    location = "Kisan Nagar Sector 4",
+                    acres = 60.0,
+                    ratePerAcre = 32.00, // custom discount rate
+                    cost = 1920.00,
+                    status = RecordStatus.COMPLETED,
+                    category = RecordCategory.SPRAYING,
+                    season = "2024",
+                    notes = "Volume discount applied",
+                    timestamp = 1728993600000L
+                ),
+                ActivityRecord(
+                    id = 4,
+                    farmerId = 1,
+                    farmerName = "Ramesh Patel",
+                    farmerMobile = "9876543210",
+                    title = "Cutting Machine - Paddy Harvesting",
+                    date = "October 10, 2024",
+                    location = "Green Valley Field B",
+                    acres = 20.0,
+                    ratePerAcre = 85.00,
+                    cost = 1700.00,
+                    status = RecordStatus.INVOICED,
+                    category = RecordCategory.HARVESTING,
+                    season = "2024",
+                    notes = "Payment pending via UPI / Cash",
+                    timestamp = 1728561600000L
+                ),
+                ActivityRecord(
+                    id = 5,
+                    farmerId = 4,
+                    farmerName = "Vikram Sharma",
+                    farmerMobile = "9898765432",
+                    title = "Drone Spraying - Herbicide",
+                    date = "October 05, 2024",
+                    location = "West Delta Sector 2",
+                    acres = 35.0,
+                    ratePerAcre = 35.00,
+                    cost = 1225.00,
+                    status = RecordStatus.COMPLETED,
+                    category = RecordCategory.SPRAYING,
+                    season = "2024",
+                    notes = "Completed in morning shift",
+                    timestamp = 1728129600000L
                 )
             )
             dao.insertAllRecords(records)

@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.agri.costtracker.ui.localization.AppStrings
 import com.agri.costtracker.ui.theme.*
 import com.agri.costtracker.ui.viewmodel.AgriViewModel
 import java.util.Locale
@@ -33,7 +34,8 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceRatesScreen(
-    viewModel: AgriViewModel
+    viewModel: AgriViewModel,
+    strings: AppStrings
 ) {
     val context = LocalContext.current
     val rates by viewModel.rates.collectAsState()
@@ -56,7 +58,7 @@ fun ServiceRatesScreen(
     ) {
         // Configuration Header
         Text(
-            text = "CONFIGURATION",
+            text = strings.configuration,
             style = MaterialTheme.typography.labelSmall.copy(
                 letterSpacing = 2.sp,
                 color = Primary,
@@ -65,7 +67,7 @@ fun ServiceRatesScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Service Rates",
+            text = strings.serviceRates,
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Black,
                 fontSize = 32.sp,
@@ -74,7 +76,7 @@ fun ServiceRatesScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Adjust your operational costs per acre for precision financial forecasting.",
+            text = strings.ratesSubtitle,
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = OnSurfaceVariant,
                 lineHeight = 20.sp
@@ -103,14 +105,14 @@ fun ServiceRatesScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Spraying",
+                            text = strings.sprayingRateTitle,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = OnSurface
                             )
                         )
                         Text(
-                            text = "PESTICIDES & FERTILIZERS",
+                            text = strings.sprayingRateSub,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 10.sp,
                                 color = OnSurfaceVariant,
@@ -138,7 +140,7 @@ fun ServiceRatesScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "COST PER ACRE",
+                    text = strings.costPerAcre,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -162,7 +164,7 @@ fun ServiceRatesScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$",
+                        text = "₹",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = OnSurfaceVariant
@@ -187,7 +189,7 @@ fun ServiceRatesScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "USD/AC",
+                        text = "₹/${strings.acres}",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -220,14 +222,14 @@ fun ServiceRatesScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Crop Cutting",
+                            text = strings.cuttingRateTitle,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = OnSurface
                             )
                         )
                         Text(
-                            text = "HARVESTING & THRESHING",
+                            text = strings.cuttingRateSub,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 10.sp,
                                 color = OnSurfaceVariant,
@@ -255,7 +257,7 @@ fun ServiceRatesScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "COST PER ACRE",
+                    text = strings.costPerAcre,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -279,7 +281,7 @@ fun ServiceRatesScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$",
+                        text = "₹",
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = OnSurfaceVariant
@@ -304,94 +306,10 @@ fun ServiceRatesScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "USD/AC",
+                        text = "₹/${strings.acres}",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = OnSurfaceVariant
-                        )
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Visual Context Grid (Global Trend & Region)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Trend
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(SecondaryFixedDim)
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "GLOBAL TREND",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = OnSecondaryFixed
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "+${rates.globalTrendPercent}%",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            color = OnSecondaryFixed
-                        )
-                    )
-                    Text(
-                        text = "Vs Last Season",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
-                            color = OnSecondaryFixedVariant
-                        )
-                    )
-                }
-            }
-
-            // Region
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(SurfaceContainerLow)
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "REGION",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Outline
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Central Plains",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = OnSurface
-                        )
-                    )
-                    Text(
-                        text = "Operational Zone",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
                             color = OnSurfaceVariant
                         )
                     )
@@ -407,7 +325,7 @@ fun ServiceRatesScreen(
                 val spraying = sprayingRateInput.toDoubleOrNull() ?: rates.sprayingRatePerAcre
                 val crop = cropCuttingRateInput.toDoubleOrNull() ?: rates.cropCuttingRatePerAcre
                 viewModel.saveRates(spraying, crop)
-                Toast.makeText(context, "Service rates successfully updated!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${strings.serviceRates} updated!", Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -435,7 +353,7 @@ fun ServiceRatesScreen(
                         tint = OnPrimary
                     )
                     Text(
-                        text = "Update Rates",
+                        text = strings.updateRates,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = OnPrimary
@@ -467,7 +385,7 @@ fun ServiceRatesScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "Changes to rates will be applied to all future calculations. Existing historical records for \"Land\" and \"History\" will remain unaffected to preserve audit integrity.",
+                    text = "Configured rates automatically auto-fill when making a new drone or cutting machine booking.",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = OnTertiaryContainer,
                         lineHeight = 18.sp

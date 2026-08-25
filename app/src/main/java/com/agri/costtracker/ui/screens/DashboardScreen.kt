@@ -1,7 +1,6 @@
 package com.agri.costtracker.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,9 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.EditNote
-import androidx.compose.material.icons.filled.PrecisionManufacturing
-import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,30 +21,30 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.agri.costtracker.data.model.RecordCategory
+import com.agri.costtracker.data.model.RecordStatus
 import com.agri.costtracker.ui.components.AgriScreen
+import com.agri.costtracker.ui.localization.AppStrings
 import com.agri.costtracker.ui.theme.*
 import com.agri.costtracker.ui.viewmodel.AgriViewModel
-import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
 fun DashboardScreen(
     viewModel: AgriViewModel,
+    strings: AppStrings,
     onNavigate: (AgriScreen) -> Unit,
+    onOpenAddBooking: () -> Unit,
+    onOpenAddFarmer: () -> Unit,
     onGenerateFiscalReport: () -> Unit
 ) {
     val metrics by viewModel.dashboardMetrics.collectAsState()
-    val profile by viewModel.profile.collectAsState()
+    val allRecords by viewModel.allRecords.collectAsState()
     val scrollState = rememberScrollState()
 
-    val currencyFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale.US).apply {
-            maximumFractionDigits = 0
-        }
-    }
     val decimalFormatter = remember {
-        NumberFormat.getNumberInstance(Locale.US).apply {
-            maximumFractionDigits = 0
+        java.text.NumberFormat.getNumberInstance(Locale.US).apply {
+            maximumFractionDigits = 1
         }
     }
 
@@ -61,7 +58,7 @@ fun DashboardScreen(
     ) {
         // Editorial Header
         Text(
-            text = "OPERATIONAL INTELLIGENCE",
+            text = "BUSINESS OPERATIONS",
             style = MaterialTheme.typography.labelSmall.copy(
                 letterSpacing = 2.sp,
                 color = Outline,
@@ -71,35 +68,84 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "Operational ",
+                text = "${strings.navDashboard} ",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Black,
-                    fontSize = 32.sp,
+                    fontSize = 28.sp,
                     color = OnSurface
                 )
             )
             Text(
-                text = "Intelligence",
+                text = "Overview",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Black,
                     fontStyle = FontStyle.Italic,
-                    fontSize = 32.sp,
+                    fontSize = 28.sp,
                     color = Primary
                 )
             )
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Strategic financial overview for the current seasonal cycle. Values calculated based on real-time commodity rates and registered acreage.",
+            text = strings.dashboardSubtitle,
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = OnSurfaceVariant,
                 lineHeight = 20.sp
             )
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Total Land Card
+        // Quick Action Buttons (Add Service Booking & Register Farmer)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Button(
+                onClick = onOpenAddBooking,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp)
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(12.dp)),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Primary)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Booking", tint = OnPrimary, modifier = Modifier.size(18.dp))
+                    Text(
+                        text = strings.newBooking,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, color = OnPrimary)
+                    )
+                }
+            }
+
+            OutlinedButton(
+                onClick = onOpenAddFarmer,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = Brush.horizontalGradient(listOf(Primary, PrimaryContainer)))
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(Icons.Default.PersonAdd, contentDescription = "Add Farmer", tint = Primary, modifier = Modifier.size(18.dp))
+                    Text(
+                        text = strings.registerNewFarmer.replace("+ ", ""),
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, color = Primary)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // Total Land Serviced Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -113,7 +159,7 @@ fun DashboardScreen(
                     .padding(20.dp)
             ) {
                 Text(
-                    text = "TOTAL OPERATIONAL LAND",
+                    text = strings.totalServicedLand,
                     style = MaterialTheme.typography.labelSmall.copy(
                         letterSpacing = 1.5.sp,
                         color = Outline,
@@ -126,14 +172,14 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = decimalFormatter.format(metrics.totalAcres),
+                        text = decimalFormatter.format(metrics.totalAcresServed),
                         style = MaterialTheme.typography.displayMedium.copy(
                             fontWeight = FontWeight.Black,
                             color = Primary
                         )
                     )
                     Text(
-                        text = "ACRES",
+                        text = strings.acres.uppercase(),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = OnSurfaceVariant
@@ -144,7 +190,7 @@ fun DashboardScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Breakdown: Cultivated vs Fallow
+                // Breakdown: Spraying vs Cutting
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -158,17 +204,17 @@ fun DashboardScreen(
                     ) {
                         Column {
                             Text(
-                                text = "CULTIVATED",
+                                text = "🚁 ${strings.droneSprayed}",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
+                                    fontSize = 9.5.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Outline
                                 )
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${decimalFormatter.format(metrics.cultivatedAcres)} AC",
-                                style = MaterialTheme.typography.titleLarge.copy(
+                                text = "${decimalFormatter.format(metrics.totalSprayingAcres)} ${strings.acres}",
+                                style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Black,
                                     color = OnSurface
                                 )
@@ -185,17 +231,17 @@ fun DashboardScreen(
                     ) {
                         Column {
                             Text(
-                                text = "FALLOW",
+                                text = "🚜 ${strings.harvestedCut}",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 10.sp,
+                                    fontSize = 9.5.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = Outline
                                 )
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${decimalFormatter.format(metrics.fallowAcres)} AC",
-                                style = MaterialTheme.typography.titleLarge.copy(
+                                text = "${decimalFormatter.format(metrics.totalCuttingAcres)} ${strings.acres}",
+                                style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Black,
                                     color = OnSurface
                                 )
@@ -208,145 +254,89 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Estimated Spraying Cost Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp)),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = SecondaryFixedDim)
+        // Financial Overview Cards (Total Revenue & Pending Receivables)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(
+            // Total Billed Card
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
+                    .weight(1f)
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Primary)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(
-                        text = "ESTIMATED SPRAYING",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.5.sp,
-                            color = OnSecondaryFixed,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Icon(
-                        imageVector = Icons.Default.WaterDrop,
-                        contentDescription = "Spraying",
-                        tint = OnSecondaryFixed,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = currencyFormatter.format(metrics.estimatedSprayingCost),
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        color = OnSecondaryFixed
-                    )
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                // Progress Bar
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(OnSecondaryFixed.copy(alpha = 0.15f))
+                        .background(
+                            Brush.linearGradient(listOf(Primary, PrimaryContainer))
+                        )
+                        .padding(16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.75f)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(OnSecondaryFixed)
+                    Text(
+                        text = strings.totalBilled,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OnPrimary.copy(alpha = 0.85f)
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "₹${String.format(Locale.US, "%,.0f", metrics.totalRevenue)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            color = OnPrimary
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${metrics.recordsCount} ${strings.recentDeployments}",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            color = OnPrimary.copy(alpha = 0.9f)
+                        )
                     )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "BASED ON $${String.format(Locale.US, "%.2f", metrics.sprayingRate)}/ACRE RATE ACROSS ACTIVE SECTORS.",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.sp,
-                        color = OnSecondaryFixedVariant,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Estimated Harvesting Cost Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp)),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = PrimaryFixedDim)
-        ) {
-            Column(
+            // Pending Collections Card
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
+                    .weight(1f)
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp)),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SecondaryFixedDim)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
                     Text(
-                        text = "ESTIMATED HARVESTING",
+                        text = strings.pendingDue,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.5.sp,
-                            color = OnPrimaryFixed,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = OnSecondaryFixed
                         )
                     )
-                    Icon(
-                        imageVector = Icons.Default.PrecisionManufacturing,
-                        contentDescription = "Harvesting",
-                        tint = OnPrimaryFixed,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = currencyFormatter.format(metrics.estimatedHarvestingCost),
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontWeight = FontWeight.Black,
-                        color = OnPrimaryFixed
-                    )
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(OnPrimaryFixed.copy(alpha = 0.12f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "PROJECTED OCT 24",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = OnPrimaryFixed
-                            )
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "$${String.format(Locale.US, "%.2f", metrics.cropCuttingRate)} / ACRE",
+                        text = "₹${String.format(Locale.US, "%,.0f", metrics.pendingPayables)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            color = OnSecondaryFixed
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = strings.unpaidOnly,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.sp,
-                            color = OnPrimaryFixedVariant,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 10.sp,
+                            color = OnSecondaryFixedVariant
                         )
                     )
                 }
@@ -355,138 +345,202 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Seasonal Expenditure Flow Chart Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp)),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
+        // Service Rates Snapshot Cards
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(
+            // Drone Spraying Rate Card
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
+                    .weight(1f)
+                    .clickable { onNavigate(AgriScreen.RATES) },
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Column {
-                        Text(
-                            text = "Seasonal Expenditure Flow",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = OnSurface
-                            )
-                        )
-                        Text(
-                            text = "QUARTERLY PROJECTION VS ACTUALS",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                color = OnSurfaceVariant,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(Primary)
-                            )
-                            Text(
-                                text = "GROWTH",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(Secondary)
-                            )
-                            Text(
-                                text = "MAINT",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Bar Chart Visualizer
-                val monthlyData = listOf(
-                    Triple("MAR", 0.40f, SurfaceContainerHighest),
-                    Triple("APR", 0.65f, Primary),
-                    Triple("MAY", 0.45f, Secondary),
-                    Triple("JUN", 0.90f, PrimaryContainer),
-                    Triple("JUL", 0.30f, SurfaceContainerHighest),
-                    Triple("AUG", 0.75f, Primary),
-                    Triple("SEP", 0.55f, Secondary),
-                    Triple("OCT", 0.85f, PrimaryContainer),
-                    Triple("NOV", 0.95f, Primary),
-                    Triple("DEC", 0.40f, Secondary)
-                )
-
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(140.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
+                        .padding(14.dp)
                 ) {
-                    monthlyData.forEach { (_, fraction, color) ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 2.dp)
-                                .fillMaxHeight(fraction)
-                                .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                                .background(color)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Months Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    monthlyData.forEach { (month, _, _) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = month,
+                            text = strings.droneRate,
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp,
+                                fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Outline
-                            ),
-                            modifier = Modifier.weight(1f),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         )
+                        Icon(Icons.Default.WaterDrop, contentDescription = "Drone", tint = Primary, modifier = Modifier.size(16.dp))
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "₹${String.format(Locale.US, "%.2f", metrics.sprayingRate)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            color = Primary
+                        )
+                    )
+                    Text(
+                        text = "/ ${strings.acres}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = OnSurfaceVariant)
+                    )
+                }
+            }
+
+            // Cutting Machine Rate Card
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onNavigate(AgriScreen.RATES) },
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = strings.cuttingRate,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Outline
+                            )
+                        )
+                        Icon(Icons.Default.Agriculture, contentDescription = "Harvester", tint = Secondary, modifier = Modifier.size(16.dp))
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "₹${String.format(Locale.US, "%.2f", metrics.cropCuttingRate)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            color = Secondary
+                        )
+                    )
+                    Text(
+                        text = "/ ${strings.acres}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, color = OnSurfaceVariant)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Recent Bookings Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = strings.recentDeployments,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurface
+                )
+            )
+
+            TextButton(onClick = { onNavigate(AgriScreen.HISTORY) }) {
+                Text(
+                    text = "${strings.viewAll} (${allRecords.size})",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Primary
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Recent Bookings List
+        val recentRecords = allRecords.take(4)
+        if (recentRecords.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(strings.noBookingsFound, color = Outline)
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                recentRecords.forEach { record ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                val isDrone = record.category == RecordCategory.SPRAYING
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (isDrone) PrimaryContainer.copy(alpha = 0.2f) else SecondaryContainer.copy(alpha = 0.3f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(if (isDrone) "🚁" else "🚜", fontSize = 18.sp)
+                                }
+
+                                Column {
+                                    Text(
+                                        text = record.farmerName.ifEmpty { "Farmer" },
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    Text(
+                                        text = "${record.title} • ${record.acres} ${strings.acres}",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = OnSurfaceVariant,
+                                            fontSize = 11.sp
+                                        )
+                                    )
+                                }
+                            }
+
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "₹${String.format(Locale.US, "%,.0f", record.cost)}",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Black,
+                                        color = Primary
+                                    )
+                                )
+                                Text(
+                                    text = if (record.status == RecordStatus.INVOICED) strings.unpaid else strings.paid,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (record.status == RecordStatus.INVOICED) Secondary else Primary
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -494,27 +548,21 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Action Buttons
+        // Generate Full Business Statement Button
         Button(
             onClick = onGenerateFiscalReport,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
-                .shadow(elevation = 4.dp, shape = RoundedCornerShape(14.dp)),
+                .height(58.dp)
+                .shadow(elevation = 3.dp, shape = RoundedCornerShape(14.dp)),
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent
-            ),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues()
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(Primary, PrimaryContainer)
-                        )
-                    )
+                    .background(Brush.horizontalGradient(listOf(Primary, PrimaryContainer)))
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -524,7 +572,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Generate Full Fiscal Report",
+                        text = strings.generateFiscalReport,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = OnPrimary
@@ -536,41 +584,6 @@ fun DashboardScreen(
                         tint = OnPrimary
                     )
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedButton(
-            onClick = { onNavigate(AgriScreen.RATES) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .border(2.dp, OutlineVariant, RoundedCornerShape(14.dp)),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = SurfaceContainerLowest
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Review Input Rates",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = OnSurface
-                    )
-                )
-                Icon(
-                    imageVector = Icons.Default.EditNote,
-                    contentDescription = "Review Rates",
-                    tint = Primary
-                )
             }
         }
     }

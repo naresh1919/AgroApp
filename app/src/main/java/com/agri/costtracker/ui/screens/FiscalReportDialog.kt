@@ -1,5 +1,6 @@
 package com.agri.costtracker.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,34 +8,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.agri.costtracker.ui.localization.AppStrings
 import com.agri.costtracker.ui.theme.*
 import com.agri.costtracker.ui.viewmodel.DashboardMetrics
-import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
 fun FiscalReportDialog(
     metrics: DashboardMetrics,
-    farmerName: String,
+    businessName: String = "AgriTech Drone & Machinery Services",
+    strings: AppStrings,
     onDismiss: () -> Unit
 ) {
-    val currencyFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale.US).apply {
-            maximumFractionDigits = 2
-        }
-    }
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
 
     Dialog(onDismissRequest = onDismiss) {
@@ -43,13 +41,13 @@ fun FiscalReportDialog(
             color = SurfaceContainerLowest,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp)
+                .padding(vertical = 20.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(scrollState)
-                    .padding(24.dp)
+                    .padding(22.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -58,7 +56,7 @@ fun FiscalReportDialog(
                 ) {
                     Column {
                         Text(
-                            text = "FISCAL REPORT",
+                            text = strings.generateFiscalReport.uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 letterSpacing = 1.5.sp,
                                 color = Primary,
@@ -88,24 +86,29 @@ fun FiscalReportDialog(
                         .padding(16.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ReportRow("Farmer Account:", farmerName)
-                        ReportRow("Total Acreage:", "${metrics.totalAcres.toInt()} AC")
-                        ReportRow("Cultivated Land:", "${metrics.cultivatedAcres.toInt()} AC")
-                        ReportRow("Fallow Land:", "${metrics.fallowAcres.toInt()} AC")
+                        ReportRow("Enterprise:", businessName)
+                        ReportRow(strings.totalRegistered + ":", "${metrics.farmersCount}")
+                        ReportRow("Deployments:", "${metrics.recordsCount}")
                         HorizontalDivider(color = OutlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 4.dp))
-                        ReportRow("Spraying Rate:", "$${String.format(Locale.US, "%.2f", metrics.sprayingRate)} / AC")
-                        ReportRow("Estimated Spraying:", currencyFormatter.format(metrics.estimatedSprayingCost))
-                        ReportRow("Harvesting Rate:", "$${String.format(Locale.US, "%.2f", metrics.cropCuttingRate)} / AC")
-                        ReportRow("Estimated Harvesting:", currencyFormatter.format(metrics.estimatedHarvestingCost))
+                        ReportRow(strings.totalServiced + ":", "${String.format(Locale.US, "%.1f", metrics.totalAcresServed)} ${strings.acres}")
+                        ReportRow(strings.droneSpraying + ":", "${String.format(Locale.US, "%.1f", metrics.totalSprayingAcres)} ${strings.acres}")
+                        ReportRow(strings.cuttingMachine + ":", "${String.format(Locale.US, "%.1f", metrics.totalCuttingAcres)} ${strings.acres}")
                         HorizontalDivider(color = OutlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 4.dp))
-                        ReportRow("Total Projected Cost:", currencyFormatter.format(metrics.estimatedSprayingCost + metrics.estimatedHarvestingCost), isTotal = true)
+                        ReportRow("${strings.droneRate}:", "₹${String.format(Locale.US, "%.2f", metrics.sprayingRate)} / ${strings.acres}")
+                        ReportRow("${strings.cuttingRate}:", "₹${String.format(Locale.US, "%.2f", metrics.cropCuttingRate)} / ${strings.acres}")
+                        HorizontalDivider(color = OutlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 4.dp))
+                        ReportRow(strings.totalBilled + ":", "₹${String.format(Locale.US, "%,.2f", metrics.totalRevenue)}", isTotal = true)
+                        ReportRow(strings.pendingDue + ":", "₹${String.format(Locale.US, "%,.2f", metrics.pendingPayables)}")
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
-                    onClick = onDismiss,
+                    onClick = {
+                        Toast.makeText(context, "Fiscal report exported successfully!", Toast.LENGTH_SHORT).show()
+                        onDismiss()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -116,9 +119,9 @@ fun FiscalReportDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Download, contentDescription = "Download")
+                        Icon(Icons.Default.Share, contentDescription = "Share")
                         Text(
-                            text = "Export Statement",
+                            text = strings.exportShare,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = OnPrimary

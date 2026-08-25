@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,40 +27,27 @@ import androidx.compose.ui.unit.sp
 import com.agri.costtracker.data.model.ActivityRecord
 import com.agri.costtracker.data.model.RecordCategory
 import com.agri.costtracker.data.model.RecordStatus
+import com.agri.costtracker.ui.localization.AppStrings
 import com.agri.costtracker.ui.theme.*
 import com.agri.costtracker.ui.viewmodel.AgriViewModel
-import java.text.NumberFormat
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityHistoryScreen(
-    viewModel: AgriViewModel
+    viewModel: AgriViewModel,
+    strings: AppStrings,
+    onOpenAddBooking: () -> Unit
 ) {
     val context = LocalContext.current
     val records by viewModel.filteredRecords.collectAsState()
     val metrics by viewModel.dashboardMetrics.collectAsState()
     val filterStatus by viewModel.filterStatus.collectAsState()
+    val filterFarmerId by viewModel.filterFarmerId.collectAsState()
+    val farmers by viewModel.allFarmers.collectAsState()
     val season by viewModel.selectedSeason.collectAsState()
 
-    var showAddDialog by remember { mutableStateOf(false) }
-    var showFilterSheet by remember { mutableStateOf(false) }
-
-    val currencyFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale.US).apply {
-            maximumFractionDigits = 2
-        }
-    }
-
-    if (showAddDialog) {
-        AddActivityDialog(
-            onDismiss = { showAddDialog = false },
-            onAddRecord = { title, category, cost, location, status, date ->
-                viewModel.addRecord(title, category, cost, location, status, date)
-                Toast.makeText(context, "New activity record added!", Toast.LENGTH_SHORT).show()
-            }
-        )
-    }
+    var showFarmerFilterMenu by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier
@@ -73,7 +61,7 @@ fun ActivityHistoryScreen(
         item {
             Column {
                 Text(
-                    text = "ARCHIVE",
+                    text = strings.serviceHistory.uppercase(),
                     style = MaterialTheme.typography.labelSmall.copy(
                         letterSpacing = 2.sp,
                         color = Primary,
@@ -87,10 +75,10 @@ fun ActivityHistoryScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Seasonal Records",
+                        text = strings.serviceHistory,
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Black,
-                            fontSize = 30.sp,
+                            fontSize = 28.sp,
                             color = OnSurface
                         )
                     )
@@ -99,7 +87,8 @@ fun ActivityHistoryScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
@@ -108,7 +97,7 @@ fun ActivityHistoryScreen(
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            text = "ACTIVE SEASON: $season",
+                            text = "SEASON: $season",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -136,13 +125,13 @@ fun ActivityHistoryScreen(
             }
         }
 
-        // Bento Summary Cards (Total Seasonal Investment & Pending Payables)
+        // Bento Summary Cards (Total Revenue & Pending Receivables)
         item {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Total Seasonal Investment Card
+                // Total Revenue Card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -162,46 +151,35 @@ fun ActivityHistoryScreen(
                     ) {
                         Column {
                             Text(
-                                text = "TOTAL SEASONAL INVESTMENT",
+                                text = strings.totalBilled,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     letterSpacing = 1.5.sp,
-                                    color = OnPrimary.copy(alpha = 0.8f),
+                                    color = OnPrimary.copy(alpha = 0.85f),
                                     fontWeight = FontWeight.Bold
                                 )
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = currencyFormatter.format(metrics.totalSeasonalInvestment),
+                                text = "₹${String.format(Locale.US, "%,.2f", metrics.totalRevenue)}",
                                 style = MaterialTheme.typography.displayMedium.copy(
                                     fontWeight = FontWeight.Black,
                                     color = OnPrimary
                                 )
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.TrendingUp,
-                                    contentDescription = "Trending Up",
-                                    tint = PrimaryFixed,
-                                    modifier = Modifier.size(16.dp)
+                            Text(
+                                text = "${String.format(Locale.US, "%.1f", metrics.totalAcresServed)} ${strings.acres} Serviced",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = PrimaryFixed
                                 )
-                                Text(
-                                    text = "+12% vs previous season",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = PrimaryFixed
-                                    )
-                                )
-                            }
+                            )
                         }
                     }
                 }
 
-                // Pending Payables Card
+                // Pending Collections Card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -212,22 +190,22 @@ fun ActivityHistoryScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(20.dp),
+                            .padding(18.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
                             Text(
-                                text = "PENDING PAYABLES",
+                                text = strings.pendingDue,
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     letterSpacing = 1.5.sp,
                                     color = OnSecondaryFixed,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = currencyFormatter.format(metrics.pendingPayables),
+                                text = "₹${String.format(Locale.US, "%,.2f", metrics.pendingPayables)}",
                                 style = MaterialTheme.typography.headlineLarge.copy(
                                     fontWeight = FontWeight.Black,
                                     color = OnSecondaryFixed
@@ -236,7 +214,7 @@ fun ActivityHistoryScreen(
                         }
                         Icon(
                             imageVector = Icons.Default.Payments,
-                            contentDescription = "Payments",
+                            contentDescription = "Pending",
                             tint = OnSecondaryFixed,
                             modifier = Modifier.size(36.dp)
                         )
@@ -245,53 +223,25 @@ fun ActivityHistoryScreen(
             }
         }
 
-        // Recent History Controls (Filter & Add Record)
+        // Filter and Add Controls
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Recent History",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = OnSurface
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = strings.bookingsFeed,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurface
+                        )
                     )
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(
-                        onClick = {
-                            // Cycle filter: All -> COMPLETED -> INVOICED -> ARCHIVED -> All
-                            val nextFilter = when (filterStatus) {
-                                null -> RecordStatus.COMPLETED
-                                RecordStatus.COMPLETED -> RecordStatus.INVOICED
-                                RecordStatus.INVOICED -> RecordStatus.ARCHIVED
-                                RecordStatus.ARCHIVED -> null
-                            }
-                            viewModel.setFilterStatus(nextFilter)
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.FilterList,
-                            contentDescription = "Filter",
-                            tint = Primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = filterStatus?.name ?: "All Filter",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Primary
-                            )
-                        )
-                    }
 
                     FilledTonalButton(
-                        onClick = { showAddDialog = true },
-                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = PrimaryContainer.copy(alpha = 0.15f))
+                        onClick = onOpenAddBooking,
+                        colors = ButtonDefaults.filledTonalButtonColors(containerColor = PrimaryContainer.copy(alpha = 0.2f))
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -301,7 +251,7 @@ fun ActivityHistoryScreen(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Add",
+                            text = strings.newBooking,
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = Primary
@@ -309,43 +259,108 @@ fun ActivityHistoryScreen(
                         )
                     }
                 }
+
+                // Filter Row (Status & Farmer filter)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Status Filter Button
+                    OutlinedButton(
+                        onClick = {
+                            val nextFilter = when (filterStatus) {
+                                null -> RecordStatus.INVOICED
+                                RecordStatus.INVOICED -> RecordStatus.COMPLETED
+                                RecordStatus.COMPLETED -> RecordStatus.ARCHIVED
+                                RecordStatus.ARCHIVED -> null
+                            }
+                            viewModel.setFilterStatus(nextFilter)
+                        },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Icon(Icons.Outlined.FilterList, contentDescription = "Status", modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = filterStatus?.let {
+                                if (it == RecordStatus.INVOICED) strings.unpaidOnly else it.name
+                            } ?: strings.allStatus,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Farmer Filter Menu
+                    Box {
+                        val activeFarmer = farmers.find { it.id == filterFarmerId }
+                        OutlinedButton(
+                            onClick = { showFarmerFilterMenu = true },
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = "Farmer", modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = activeFarmer?.name ?: strings.allFarmers,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showFarmerFilterMenu,
+                            onDismissRequest = { showFarmerFilterMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(strings.allFarmers, fontWeight = FontWeight.Bold) },
+                                onClick = {
+                                    viewModel.setFilterFarmerId(null)
+                                    showFarmerFilterMenu = false
+                                }
+                            )
+                            HorizontalDivider()
+                            farmers.forEach { farmer ->
+                                DropdownMenuItem(
+                                    text = { Text(farmer.name) },
+                                    onClick = {
+                                        viewModel.setFilterFarmerId(farmer.id)
+                                        showFarmerFilterMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
         // List of Activity Items
-        items(records, key = { it.id }) { record ->
-            ActivityRecordItem(
-                record = record,
-                currencyFormatter = currencyFormatter,
-                onDelete = { viewModel.deleteRecord(record) }
-            )
-        }
-
-        // Archive Footer Button
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Button(
-                    onClick = {
-                        viewModel.setSeason(if (season == "2024") "2023" else "2024")
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SurfaceContainer
-                    )
+        if (records.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (season == "2024") "VIEW FULL 2023 ARCHIVE" else "BACK TO 2024 RECORDS",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            letterSpacing = 1.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = OnSurfaceVariant
-                        )
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Info, contentDescription = "Empty", tint = Outline, modifier = Modifier.size(40.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(strings.noBookingsFound, color = OnSurfaceVariant)
+                    }
                 }
+            }
+        } else {
+            items(records, key = { it.id }) { record ->
+                ActivityRecordItem(
+                    record = record,
+                    strings = strings,
+                    onDelete = {
+                        viewModel.deleteRecord(record)
+                        Toast.makeText(context, "${record.title} ${strings.delete}", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
     }
@@ -354,7 +369,7 @@ fun ActivityHistoryScreen(
 @Composable
 fun ActivityRecordItem(
     record: ActivityRecord,
-    currencyFormatter: NumberFormat,
+    strings: AppStrings,
     onDelete: () -> Unit
 ) {
     Card(
@@ -373,14 +388,14 @@ fun ActivityRecordItem(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 // Category Icon
                 val (icon, iconTint, iconBg) = getCategoryStyling(record.category)
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(46.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(iconBg),
                     contentAlignment = Alignment.Center
@@ -389,38 +404,42 @@ fun ActivityRecordItem(
                         imageVector = icon,
                         contentDescription = record.category.name,
                         tint = iconTint,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
                 Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = record.title,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = OnSurface
-                            )
+                    Text(
+                        text = record.farmerName.ifEmpty { "Farmer" },
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurface
                         )
-                    }
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    // Status Badge
-                    StatusBadge(record.status)
-
-                    Spacer(modifier = Modifier.height(4.dp))
+                    )
 
                     Text(
-                        text = "${record.date} • ${record.location}",
+                        text = "${record.title} • ${record.acres} ${strings.acres} @ ₹${String.format(Locale.US, "%.2f", record.ratePerAcre)}/${strings.acres}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = OnSurfaceVariant,
                             fontSize = 11.sp
                         )
                     )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        StatusBadge(record.status, strings)
+                        Text(
+                            text = "${record.date} • ${record.location}",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Outline,
+                                fontSize = 10.sp
+                            )
+                        )
+                    }
                 }
             }
 
@@ -428,31 +447,35 @@ fun ActivityRecordItem(
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = currencyFormatter.format(record.cost),
+                    text = "₹${String.format(Locale.US, "%,.2f", record.cost)}",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Black,
                         color = OnSurface
                     )
                 )
-                Text(
-                    text = "TOTAL COST USD",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 9.sp,
-                        color = Outline,
-                        fontWeight = FontWeight.Bold
+
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.Delete,
+                        contentDescription = "Delete",
+                        tint = Outline.copy(alpha = 0.6f),
+                        modifier = Modifier.size(16.dp)
                     )
-                )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StatusBadge(status: RecordStatus) {
-    val (bg, text) = when (status) {
-        RecordStatus.COMPLETED -> GreenCardBadgeBg to GreenCardBadgeText
-        RecordStatus.INVOICED -> OrangeCardBadgeBg to OrangeCardBadgeText
-        RecordStatus.ARCHIVED -> GrayCardBadgeBg to GrayCardBadgeText
+private fun StatusBadge(status: RecordStatus, strings: AppStrings) {
+    val (bg, text, label) = when (status) {
+        RecordStatus.COMPLETED -> Triple(GreenCardBadgeBg, GreenCardBadgeText, strings.paid)
+        RecordStatus.INVOICED -> Triple(OrangeCardBadgeBg, OrangeCardBadgeText, strings.unpaid)
+        RecordStatus.ARCHIVED -> Triple(GrayCardBadgeBg, GrayCardBadgeText, "ARCHIVED")
     }
     Box(
         modifier = Modifier
@@ -461,7 +484,7 @@ private fun StatusBadge(status: RecordStatus) {
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
         Text(
-            text = status.name,
+            text = label,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 9.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -473,12 +496,12 @@ private fun StatusBadge(status: RecordStatus) {
 
 private fun getCategoryStyling(category: RecordCategory): Triple<ImageVector, Color, Color> {
     return when (category) {
+        RecordCategory.SPRAYING -> Triple(Icons.Default.WaterDrop, Primary, PrimaryFixedDim.copy(alpha = 0.3f))
+        RecordCategory.HARVESTING -> Triple(Icons.Default.Agriculture, Secondary, SecondaryFixedDim)
         RecordCategory.LAND -> Triple(Icons.Default.Landscape, Primary, SurfaceContainerLow)
         RecordCategory.SEEDS -> Triple(Icons.Default.Eco, Tertiary, TertiaryContainer.copy(alpha = 0.2f))
-        RecordCategory.MAINTENANCE -> Triple(Icons.Default.Agriculture, Secondary, SecondaryContainer)
+        RecordCategory.MAINTENANCE -> Triple(Icons.Default.PrecisionManufacturing, Secondary, SecondaryContainer)
         RecordCategory.IRRIGATION -> Triple(Icons.Default.WaterDrop, Primary, PrimaryContainer.copy(alpha = 0.15f))
-        RecordCategory.SPRAYING -> Triple(Icons.Default.WaterDrop, Primary, PrimaryFixedDim.copy(alpha = 0.3f))
-        RecordCategory.HARVESTING -> Triple(Icons.Default.PrecisionManufacturing, Secondary, SecondaryFixedDim)
         RecordCategory.OTHER -> Triple(Icons.Default.Payments, Outline, SurfaceContainerLow)
     }
 }

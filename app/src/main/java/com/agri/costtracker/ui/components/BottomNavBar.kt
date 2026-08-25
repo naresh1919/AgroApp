@@ -1,6 +1,5 @@
 package com.agri.costtracker.ui.components
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,12 +8,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Landscape
 import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -27,18 +26,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.agri.costtracker.ui.localization.AppStrings
 import com.agri.costtracker.ui.theme.Primary
 
-enum class AgriScreen(val title: String, val activeIcon: ImageVector, val inactiveIcon: ImageVector) {
-    LAND("LAND", Icons.Filled.Landscape, Icons.Outlined.Landscape),
-    RATES("RATES", Icons.Filled.Payments, Icons.Outlined.Payments),
-    DASHBOARD("DASHBOARD", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-    HISTORY("HISTORY", Icons.Filled.History, Icons.Outlined.History)
+enum class AgriScreen(val activeIcon: ImageVector, val inactiveIcon: ImageVector) {
+    DASHBOARD(Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
+    FARMERS(Icons.Filled.People, Icons.Outlined.People),
+    RATES(Icons.Filled.Payments, Icons.Outlined.Payments),
+    HISTORY(Icons.Filled.History, Icons.Outlined.History)
 }
 
 @Composable
 fun AgriBottomNavBar(
     currentScreen: AgriScreen,
+    strings: AppStrings,
     onScreenSelected: (AgriScreen) -> Unit
 ) {
     Surface(
@@ -57,7 +58,7 @@ fun AgriBottomNavBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -65,6 +66,13 @@ fun AgriBottomNavBar(
                 val selected = currentScreen == screen
                 val containerColor = if (selected) Color(0xFFDCFCE7) else Color.Transparent
                 val contentColor = if (selected) Primary else Color(0xFF78716C)
+
+                val screenTitle = when (screen) {
+                    AgriScreen.DASHBOARD -> strings.navDashboard
+                    AgriScreen.FARMERS -> strings.navFarmers
+                    AgriScreen.RATES -> strings.navRates
+                    AgriScreen.HISTORY -> strings.navHistory
+                }
 
                 Box(
                     modifier = Modifier
@@ -76,7 +84,7 @@ fun AgriBottomNavBar(
                         ) {
                             onScreenSelected(screen)
                         }
-                        .padding(horizontal = if (selected) 16.dp else 12.dp, vertical = 6.dp),
+                        .padding(horizontal = if (selected) 12.dp else 8.dp, vertical = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -85,16 +93,16 @@ fun AgriBottomNavBar(
                     ) {
                         Icon(
                             imageVector = if (selected) screen.activeIcon else screen.inactiveIcon,
-                            contentDescription = screen.title,
+                            contentDescription = screenTitle,
                             tint = contentColor,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = screen.title,
-                            fontSize = 10.sp,
+                            text = screenTitle,
+                            fontSize = 9.5.sp,
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                            letterSpacing = 0.5.sp,
+                            letterSpacing = 0.3.sp,
                             color = contentColor
                         )
                     }

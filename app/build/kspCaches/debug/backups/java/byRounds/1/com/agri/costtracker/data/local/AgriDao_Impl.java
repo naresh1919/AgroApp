@@ -13,6 +13,7 @@ import androidx.room.util.CursorUtil;
 import androidx.room.util.DBUtil;
 import androidx.sqlite.db.SupportSQLiteStatement;
 import com.agri.costtracker.data.model.ActivityRecord;
+import com.agri.costtracker.data.model.Farmer;
 import com.agri.costtracker.data.model.FarmerProfile;
 import com.agri.costtracker.data.model.RecordCategory;
 import com.agri.costtracker.data.model.RecordStatus;
@@ -39,18 +40,43 @@ import kotlinx.coroutines.flow.Flow;
 public final class AgriDao_Impl implements AgriDao {
   private final RoomDatabase __db;
 
+  private final EntityInsertionAdapter<Farmer> __insertionAdapterOfFarmer;
+
   private final EntityInsertionAdapter<FarmerProfile> __insertionAdapterOfFarmerProfile;
 
   private final EntityInsertionAdapter<ServiceRates> __insertionAdapterOfServiceRates;
 
   private final EntityInsertionAdapter<ActivityRecord> __insertionAdapterOfActivityRecord;
 
+  private final EntityDeletionOrUpdateAdapter<Farmer> __deletionAdapterOfFarmer;
+
   private final EntityDeletionOrUpdateAdapter<ActivityRecord> __deletionAdapterOfActivityRecord;
+
+  private final EntityDeletionOrUpdateAdapter<Farmer> __updateAdapterOfFarmer;
 
   private final SharedSQLiteStatement __preparedStmtOfClearAllRecords;
 
   public AgriDao_Impl(@NonNull final RoomDatabase __db) {
     this.__db = __db;
+    this.__insertionAdapterOfFarmer = new EntityInsertionAdapter<Farmer>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "INSERT OR REPLACE INTO `farmers` (`id`,`name`,`mobile`,`village`,`totalAcres`,`notes`,`createdAt`) VALUES (nullif(?, 0),?,?,?,?,?,?)";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final Farmer entity) {
+        statement.bindLong(1, entity.getId());
+        statement.bindString(2, entity.getName());
+        statement.bindString(3, entity.getMobile());
+        statement.bindString(4, entity.getVillage());
+        statement.bindDouble(5, entity.getTotalAcres());
+        statement.bindString(6, entity.getNotes());
+        statement.bindLong(7, entity.getCreatedAt());
+      }
+    };
     this.__insertionAdapterOfFarmerProfile = new EntityInsertionAdapter<FarmerProfile>(__db) {
       @Override
       @NonNull
@@ -92,21 +118,40 @@ public final class AgriDao_Impl implements AgriDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `activity_records` (`id`,`title`,`date`,`location`,`cost`,`status`,`category`,`season`,`timestamp`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `activity_records` (`id`,`farmerId`,`farmerName`,`farmerMobile`,`title`,`date`,`location`,`cost`,`acres`,`ratePerAcre`,`status`,`category`,`season`,`notes`,`timestamp`) VALUES (nullif(?, 0),?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
       protected void bind(@NonNull final SupportSQLiteStatement statement,
           @NonNull final ActivityRecord entity) {
         statement.bindLong(1, entity.getId());
-        statement.bindString(2, entity.getTitle());
-        statement.bindString(3, entity.getDate());
-        statement.bindString(4, entity.getLocation());
-        statement.bindDouble(5, entity.getCost());
-        statement.bindString(6, __RecordStatus_enumToString(entity.getStatus()));
-        statement.bindString(7, __RecordCategory_enumToString(entity.getCategory()));
-        statement.bindString(8, entity.getSeason());
-        statement.bindLong(9, entity.getTimestamp());
+        statement.bindLong(2, entity.getFarmerId());
+        statement.bindString(3, entity.getFarmerName());
+        statement.bindString(4, entity.getFarmerMobile());
+        statement.bindString(5, entity.getTitle());
+        statement.bindString(6, entity.getDate());
+        statement.bindString(7, entity.getLocation());
+        statement.bindDouble(8, entity.getCost());
+        statement.bindDouble(9, entity.getAcres());
+        statement.bindDouble(10, entity.getRatePerAcre());
+        statement.bindString(11, __RecordStatus_enumToString(entity.getStatus()));
+        statement.bindString(12, __RecordCategory_enumToString(entity.getCategory()));
+        statement.bindString(13, entity.getSeason());
+        statement.bindString(14, entity.getNotes());
+        statement.bindLong(15, entity.getTimestamp());
+      }
+    };
+    this.__deletionAdapterOfFarmer = new EntityDeletionOrUpdateAdapter<Farmer>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "DELETE FROM `farmers` WHERE `id` = ?";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final Farmer entity) {
+        statement.bindLong(1, entity.getId());
       }
     };
     this.__deletionAdapterOfActivityRecord = new EntityDeletionOrUpdateAdapter<ActivityRecord>(__db) {
@@ -122,6 +167,26 @@ public final class AgriDao_Impl implements AgriDao {
         statement.bindLong(1, entity.getId());
       }
     };
+    this.__updateAdapterOfFarmer = new EntityDeletionOrUpdateAdapter<Farmer>(__db) {
+      @Override
+      @NonNull
+      protected String createQuery() {
+        return "UPDATE OR ABORT `farmers` SET `id` = ?,`name` = ?,`mobile` = ?,`village` = ?,`totalAcres` = ?,`notes` = ?,`createdAt` = ? WHERE `id` = ?";
+      }
+
+      @Override
+      protected void bind(@NonNull final SupportSQLiteStatement statement,
+          @NonNull final Farmer entity) {
+        statement.bindLong(1, entity.getId());
+        statement.bindString(2, entity.getName());
+        statement.bindString(3, entity.getMobile());
+        statement.bindString(4, entity.getVillage());
+        statement.bindDouble(5, entity.getTotalAcres());
+        statement.bindString(6, entity.getNotes());
+        statement.bindLong(7, entity.getCreatedAt());
+        statement.bindLong(8, entity.getId());
+      }
+    };
     this.__preparedStmtOfClearAllRecords = new SharedSQLiteStatement(__db) {
       @Override
       @NonNull
@@ -130,6 +195,43 @@ public final class AgriDao_Impl implements AgriDao {
         return _query;
       }
     };
+  }
+
+  @Override
+  public Object insertFarmer(final Farmer farmer, final Continuation<? super Long> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Long>() {
+      @Override
+      @NonNull
+      public Long call() throws Exception {
+        __db.beginTransaction();
+        try {
+          final Long _result = __insertionAdapterOfFarmer.insertAndReturnId(farmer);
+          __db.setTransactionSuccessful();
+          return _result;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object insertAllFarmers(final List<Farmer> farmers,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __insertionAdapterOfFarmer.insert(farmers);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
   }
 
   @Override
@@ -209,6 +311,24 @@ public final class AgriDao_Impl implements AgriDao {
   }
 
   @Override
+  public Object deleteFarmer(final Farmer farmer, final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __deletionAdapterOfFarmer.handle(farmer);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
   public Object deleteRecord(final ActivityRecord record,
       final Continuation<? super Unit> $completion) {
     return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
@@ -218,6 +338,24 @@ public final class AgriDao_Impl implements AgriDao {
         __db.beginTransaction();
         try {
           __deletionAdapterOfActivityRecord.handle(record);
+          __db.setTransactionSuccessful();
+          return Unit.INSTANCE;
+        } finally {
+          __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object updateFarmer(final Farmer farmer, final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        __db.beginTransaction();
+        try {
+          __updateAdapterOfFarmer.handle(farmer);
           __db.setTransactionSuccessful();
           return Unit.INSTANCE;
         } finally {
@@ -248,6 +386,108 @@ public final class AgriDao_Impl implements AgriDao {
         }
       }
     }, $completion);
+  }
+
+  @Override
+  public Flow<List<Farmer>> getAllFarmers() {
+    final String _sql = "SELECT * FROM farmers ORDER BY createdAt DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"farmers"}, new Callable<List<Farmer>>() {
+      @Override
+      @NonNull
+      public List<Farmer> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfName = CursorUtil.getColumnIndexOrThrow(_cursor, "name");
+          final int _cursorIndexOfMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "mobile");
+          final int _cursorIndexOfVillage = CursorUtil.getColumnIndexOrThrow(_cursor, "village");
+          final int _cursorIndexOfTotalAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "totalAcres");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final List<Farmer> _result = new ArrayList<Farmer>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final Farmer _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpName;
+            _tmpName = _cursor.getString(_cursorIndexOfName);
+            final String _tmpMobile;
+            _tmpMobile = _cursor.getString(_cursorIndexOfMobile);
+            final String _tmpVillage;
+            _tmpVillage = _cursor.getString(_cursorIndexOfVillage);
+            final double _tmpTotalAcres;
+            _tmpTotalAcres = _cursor.getDouble(_cursorIndexOfTotalAcres);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpCreatedAt;
+            _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            _item = new Farmer(_tmpId,_tmpName,_tmpMobile,_tmpVillage,_tmpTotalAcres,_tmpNotes,_tmpCreatedAt);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<Farmer> getFarmerById(final long id) {
+    final String _sql = "SELECT * FROM farmers WHERE id = ?";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, id);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"farmers"}, new Callable<Farmer>() {
+      @Override
+      @Nullable
+      public Farmer call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfName = CursorUtil.getColumnIndexOrThrow(_cursor, "name");
+          final int _cursorIndexOfMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "mobile");
+          final int _cursorIndexOfVillage = CursorUtil.getColumnIndexOrThrow(_cursor, "village");
+          final int _cursorIndexOfTotalAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "totalAcres");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final Farmer _result;
+          if (_cursor.moveToFirst()) {
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpName;
+            _tmpName = _cursor.getString(_cursorIndexOfName);
+            final String _tmpMobile;
+            _tmpMobile = _cursor.getString(_cursorIndexOfMobile);
+            final String _tmpVillage;
+            _tmpVillage = _cursor.getString(_cursorIndexOfVillage);
+            final double _tmpTotalAcres;
+            _tmpTotalAcres = _cursor.getDouble(_cursorIndexOfTotalAcres);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpCreatedAt;
+            _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            _result = new Farmer(_tmpId,_tmpName,_tmpMobile,_tmpVillage,_tmpTotalAcres,_tmpNotes,_tmpCreatedAt);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
   }
 
   @Override
@@ -358,19 +598,31 @@ public final class AgriDao_Impl implements AgriDao {
         final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
         try {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfFarmerMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerMobile");
           final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
           final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
+          final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
           final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
           final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
           final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ActivityRecord _item;
             final long _tmpId;
             _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final String _tmpFarmerMobile;
+            _tmpFarmerMobile = _cursor.getString(_cursorIndexOfFarmerMobile);
             final String _tmpTitle;
             _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
             final String _tmpDate;
@@ -379,15 +631,97 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
             final double _tmpCost;
             _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpAcres;
+            _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
+            final double _tmpRatePerAcre;
+            _tmpRatePerAcre = _cursor.getDouble(_cursorIndexOfRatePerAcre);
             final RecordStatus _tmpStatus;
             _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
             final RecordCategory _tmpCategory;
             _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
             final String _tmpSeason;
             _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
             final long _tmpTimestamp;
             _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
-            _item = new ActivityRecord(_tmpId,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpStatus,_tmpCategory,_tmpSeason,_tmpTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+        }
+      }
+
+      @Override
+      protected void finalize() {
+        _statement.release();
+      }
+    });
+  }
+
+  @Override
+  public Flow<List<ActivityRecord>> getRecordsByFarmer(final long farmerId) {
+    final String _sql = "SELECT * FROM activity_records WHERE farmerId = ? ORDER BY timestamp DESC";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindLong(_argIndex, farmerId);
+    return CoroutinesRoom.createFlow(__db, false, new String[] {"activity_records"}, new Callable<List<ActivityRecord>>() {
+      @Override
+      @NonNull
+      public List<ActivityRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfFarmerMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerMobile");
+          final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
+          final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
+          final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
+          final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
+          final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
+          final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ActivityRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final String _tmpFarmerMobile;
+            _tmpFarmerMobile = _cursor.getString(_cursorIndexOfFarmerMobile);
+            final String _tmpTitle;
+            _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpLocation;
+            _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
+            final double _tmpCost;
+            _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpAcres;
+            _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
+            final double _tmpRatePerAcre;
+            _tmpRatePerAcre = _cursor.getDouble(_cursorIndexOfRatePerAcre);
+            final RecordStatus _tmpStatus;
+            _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
+            final RecordCategory _tmpCategory;
+            _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
+            final String _tmpSeason;
+            _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
             _result.add(_item);
           }
           return _result;
@@ -416,19 +750,31 @@ public final class AgriDao_Impl implements AgriDao {
         final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
         try {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfFarmerMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerMobile");
           final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
           final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
+          final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
           final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
           final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
           final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ActivityRecord _item;
             final long _tmpId;
             _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final String _tmpFarmerMobile;
+            _tmpFarmerMobile = _cursor.getString(_cursorIndexOfFarmerMobile);
             final String _tmpTitle;
             _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
             final String _tmpDate;
@@ -437,15 +783,21 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
             final double _tmpCost;
             _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpAcres;
+            _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
+            final double _tmpRatePerAcre;
+            _tmpRatePerAcre = _cursor.getDouble(_cursorIndexOfRatePerAcre);
             final RecordStatus _tmpStatus;
             _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
             final RecordCategory _tmpCategory;
             _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
             final String _tmpSeason;
             _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
             final long _tmpTimestamp;
             _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
-            _item = new ActivityRecord(_tmpId,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpStatus,_tmpCategory,_tmpSeason,_tmpTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
             _result.add(_item);
           }
           return _result;
@@ -474,19 +826,31 @@ public final class AgriDao_Impl implements AgriDao {
         final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
         try {
           final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfFarmerMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerMobile");
           final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
           final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
           final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
           final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
+          final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
           final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
           final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
           final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
           while (_cursor.moveToNext()) {
             final ActivityRecord _item;
             final long _tmpId;
             _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final String _tmpFarmerMobile;
+            _tmpFarmerMobile = _cursor.getString(_cursorIndexOfFarmerMobile);
             final String _tmpTitle;
             _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
             final String _tmpDate;
@@ -495,15 +859,21 @@ public final class AgriDao_Impl implements AgriDao {
             _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
             final double _tmpCost;
             _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpAcres;
+            _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
+            final double _tmpRatePerAcre;
+            _tmpRatePerAcre = _cursor.getDouble(_cursorIndexOfRatePerAcre);
             final RecordStatus _tmpStatus;
             _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
             final RecordCategory _tmpCategory;
             _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
             final String _tmpSeason;
             _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
             final long _tmpTimestamp;
             _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
-            _item = new ActivityRecord(_tmpId,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpStatus,_tmpCategory,_tmpSeason,_tmpTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
             _result.add(_item);
           }
           return _result;
@@ -535,12 +905,12 @@ public final class AgriDao_Impl implements AgriDao {
 
   private String __RecordCategory_enumToString(@NonNull final RecordCategory _value) {
     switch (_value) {
+      case SPRAYING: return "SPRAYING";
+      case HARVESTING: return "HARVESTING";
       case LAND: return "LAND";
       case SEEDS: return "SEEDS";
       case MAINTENANCE: return "MAINTENANCE";
       case IRRIGATION: return "IRRIGATION";
-      case SPRAYING: return "SPRAYING";
-      case HARVESTING: return "HARVESTING";
       case OTHER: return "OTHER";
       default: throw new IllegalArgumentException("Can't convert enum to string, unknown enum value: " + _value);
     }
@@ -557,12 +927,12 @@ public final class AgriDao_Impl implements AgriDao {
 
   private RecordCategory __RecordCategory_stringToEnum(@NonNull final String _value) {
     switch (_value) {
+      case "SPRAYING": return RecordCategory.SPRAYING;
+      case "HARVESTING": return RecordCategory.HARVESTING;
       case "LAND": return RecordCategory.LAND;
       case "SEEDS": return RecordCategory.SEEDS;
       case "MAINTENANCE": return RecordCategory.MAINTENANCE;
       case "IRRIGATION": return RecordCategory.IRRIGATION;
-      case "SPRAYING": return RecordCategory.SPRAYING;
-      case "HARVESTING": return RecordCategory.HARVESTING;
       case "OTHER": return RecordCategory.OTHER;
       default: throw new IllegalArgumentException("Can't convert value to enum, unknown value: " + _value);
     }
