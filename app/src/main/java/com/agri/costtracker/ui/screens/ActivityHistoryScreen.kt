@@ -6,7 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Delete
@@ -22,8 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import java.text.SimpleDateFormat
+import java.util.Date
 import com.agri.costtracker.data.model.ActivityRecord
 import com.agri.costtracker.data.model.RecordCategory
 import com.agri.costtracker.data.model.RecordStatus
@@ -48,6 +55,173 @@ fun ActivityHistoryScreen(
     val season by viewModel.selectedSeason.collectAsState()
 
     var showFarmerFilterMenu by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var recordForPayment by remember { mutableStateOf<ActivityRecord?>(null) }
+    var paymentAmountInput by remember { mutableStateOf("") }
+    var paymentMode by remember { mutableStateOf("CASH") }
+    var paymentNotes by remember { mutableStateOf("") }
+    var paymentError by remember { mutableStateOf<String?>(null) }
+    var recordToDelete by remember { mutableStateOf<ActivityRecord?>(null) }
+
+    val displayedRecords = remember(records, searchQuery) {
+        if (searchQuery.isBlank()) records
+        else {
+            records.filter {
+                it.farmerName.contains(searchQuery, ignoreCase = true) ||
+                it.title.contains(searchQuery, ignoreCase = true) ||
+                it.location.contains(searchQuery, ignoreCase = true) ||
+                it.date.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    // Quick Payment Settlement Dialog
+    if (recordForPayment != null) {
+        val activeRec = recordForPayment!!
+        val remaining = (activeRec.cost - activeRec.paidAmount).coerceAtLeast(0.0)
+
+        Dialog(onDismissRequest = { recordForPayment = null }) {
+            Surface(
+                shape = RoundedCornerShape(18.dp),
+                color = SurfaceContainerLowest,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(22.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = strings.recordPayment,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "${activeRec.farmerName} • ${activeRec.title}",
+                                style = MaterialTheme.typography.bodySmall.copy(color = OnSurfaceVariant, fontSize = 11.sp)
+                            )
+                        }
+                        IconButton(onClick = { recordForPayment = null }) {
+                            Icon(Icons.Default.Close, contentDescription = "Close")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(strings.pendingBalanceDue, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = Outline))
+                            Text("₹${String.format(Locale.US, "%,.2f", remaining)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black, color = Secondary))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    OutlinedTextField(
+                        value = paymentAmountInput,
+                        onValueChange = {
+                            paymentAmountInput = it
+                            paymentError = null
+                        },
+                        label = { Text(strings.enterPaymentAmount) },
+                        placeholder = { Text("e.g. 5000.00") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (paymentError != null) {
+                        Text(
+                            text = paymentError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf("CASH", "UPI", "BANK").forEach { mode ->
+                            FilterChip(
+                                selected = paymentMode == mode,
+                                onClick = { paymentMode = mode },
+                                label = { Text(mode, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = paymentNotes,
+                        onValueChange = { paymentNotes = it },
+                        label = { Text(strings.cropsNotes) },
+                        placeholder = { Text("e.g. Paid via PhonePe / cash in field") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Button(
+                        onClick = {
+                            val amt = paymentAmountInput.toDoubleOrNull() ?: 0.0
+                            paymentError = when {
+                                amt <= 0 -> "Enter a payment greater than zero"
+                                amt > remaining -> "Payment cannot exceed the pending balance"
+                                else -> null
+                            }
+                            if (paymentError == null) {
+                                val today = SimpleDateFormat("MMMM dd, yyyy", Locale.US).format(Date())
+                                viewModel.recordPayment(activeRec, amt, today, paymentMode, paymentNotes)
+                                Toast.makeText(context, "${strings.paymentRecordedSuccess}: ₹${String.format(Locale.US, "%,.2f", amt)}", Toast.LENGTH_SHORT).show()
+                                recordForPayment = null
+                                paymentAmountInput = ""
+                                paymentNotes = ""
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                    ) {
+                        Text(strings.save, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    recordToDelete?.let { record ->
+        AlertDialog(
+            onDismissRequest = { recordToDelete = null },
+            title = { Text("Delete booking?") },
+            text = { Text("This will permanently remove ${record.title} and its payment history.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteRecord(record)
+                        Toast.makeText(context, "${record.title} ${strings.delete}", Toast.LENGTH_SHORT).show()
+                        recordToDelete = null
+                    }
+                ) { Text(strings.delete, color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { recordToDelete = null }) { Text("Cancel") } }
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -260,49 +434,40 @@ fun ActivityHistoryScreen(
                     }
                 }
 
-                // Filter Row (Status & Farmer filter)
+                // Search Bar
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search by farmer, title, location...") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Primary)
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Farmer Filter Dropdown & Status Filter Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Status Filter Button
-                    OutlinedButton(
-                        onClick = {
-                            val nextFilter = when (filterStatus) {
-                                null -> RecordStatus.INVOICED
-                                RecordStatus.INVOICED -> RecordStatus.PARTIAL
-                                RecordStatus.PARTIAL -> RecordStatus.COMPLETED
-                                RecordStatus.COMPLETED -> RecordStatus.ARCHIVED
-                                RecordStatus.ARCHIVED -> null
-                            }
-                            viewModel.setFilterStatus(nextFilter)
-                        },
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Icon(Icons.Outlined.FilterList, contentDescription = "Status", modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = when (filterStatus) {
-                                RecordStatus.INVOICED -> strings.unpaid
-                                RecordStatus.PARTIAL -> strings.partial
-                                RecordStatus.COMPLETED -> strings.paid
-                                RecordStatus.ARCHIVED -> "ARCHIVED"
-                                null -> strings.allStatus
-                            },
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
                     // Farmer Filter Menu
                     Box {
                         val activeFarmer = farmers.find { it.id == filterFarmerId }
                         OutlinedButton(
                             onClick = { showFarmerFilterMenu = true },
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                            modifier = Modifier.height(36.dp)
+                            modifier = Modifier.height(36.dp),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(Icons.Default.Person, contentDescription = "Farmer", modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
@@ -336,12 +501,60 @@ fun ActivityHistoryScreen(
                             }
                         }
                     }
+
+                    if (filterFarmerId != null) {
+                        TextButton(
+                            onClick = { viewModel.setFilterFarmerId(null) },
+                            contentPadding = PaddingValues(horizontal = 6.dp)
+                        ) {
+                            Text("Clear", fontSize = 11.sp, color = Primary, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // Horizontal Status Filter Chips Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    FilterChip(
+                        selected = filterStatus == null,
+                        onClick = { viewModel.setFilterStatus(null) },
+                        label = { Text(strings.allStatus, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = PrimaryContainer.copy(alpha = 0.25f), selectedLabelColor = Primary)
+                    )
+                    FilterChip(
+                        selected = filterStatus == RecordStatus.INVOICED,
+                        onClick = { viewModel.setFilterStatus(RecordStatus.INVOICED) },
+                        label = { Text(strings.unpaid, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = OrangeCardBadgeBg, selectedLabelColor = OrangeCardBadgeText)
+                    )
+                    FilterChip(
+                        selected = filterStatus == RecordStatus.PARTIAL,
+                        onClick = { viewModel.setFilterStatus(RecordStatus.PARTIAL) },
+                        label = { Text(strings.partial, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = OrangeCardBadgeBg, selectedLabelColor = OrangeCardBadgeText)
+                    )
+                    FilterChip(
+                        selected = filterStatus == RecordStatus.COMPLETED,
+                        onClick = { viewModel.setFilterStatus(RecordStatus.COMPLETED) },
+                        label = { Text(strings.paid, fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = GreenCardBadgeBg, selectedLabelColor = GreenCardBadgeText)
+                    )
+                    FilterChip(
+                        selected = filterStatus == RecordStatus.ARCHIVED,
+                        onClick = { viewModel.setFilterStatus(RecordStatus.ARCHIVED) },
+                        label = { Text("ARCHIVED", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = GrayCardBadgeBg, selectedLabelColor = GrayCardBadgeText)
+                    )
                 }
             }
         }
 
         // List of Activity Items
-        if (records.isEmpty()) {
+        if (displayedRecords.isEmpty()) {
             item {
                 Box(
                     modifier = Modifier
@@ -352,18 +565,25 @@ fun ActivityHistoryScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Info, contentDescription = "Empty", tint = Outline, modifier = Modifier.size(40.dp))
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(strings.noBookingsFound, color = OnSurfaceVariant)
+                        Text(
+                            text = if (searchQuery.isNotBlank()) "No records match '$searchQuery'" else strings.noBookingsFound,
+                            color = OnSurfaceVariant
+                        )
                     }
                 }
             }
         } else {
-            items(records, key = { it.id }) { record ->
+            items(displayedRecords, key = { it.id }) { record ->
                 ActivityRecordItem(
                     record = record,
                     strings = strings,
+                    onRecordPayment = {
+                        val due = (record.cost - record.paidAmount).coerceAtLeast(0.0)
+                        paymentAmountInput = String.format(Locale.US, "%.2f", due)
+                        recordForPayment = record
+                    },
                     onDelete = {
-                        viewModel.deleteRecord(record)
-                        Toast.makeText(context, "${record.title} ${strings.delete}", Toast.LENGTH_SHORT).show()
+                        recordToDelete = record
                     }
                 )
             }
@@ -375,8 +595,11 @@ fun ActivityHistoryScreen(
 fun ActivityRecordItem(
     record: ActivityRecord,
     strings: AppStrings,
+    onRecordPayment: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val remainingDue = (record.cost - record.paidAmount).coerceAtLeast(0.0)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -449,7 +672,8 @@ fun ActivityRecordItem(
             }
 
             Column(
-                horizontalAlignment = Alignment.End
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = "₹${String.format(Locale.US, "%,.2f", record.cost)}",
@@ -459,16 +683,34 @@ fun ActivityRecordItem(
                     )
                 )
 
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(28.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = "Delete",
-                        tint = Outline.copy(alpha = 0.6f),
-                        modifier = Modifier.size(16.dp)
-                    )
+                    if (remainingDue > 0) {
+                        FilledTonalButton(
+                            onClick = onRecordPayment,
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(28.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = SecondaryFixed)
+                        ) {
+                            Icon(Icons.Default.Payments, contentDescription = "Pay", tint = OnSecondaryFixed, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("Pay", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = OnSecondaryFixed)
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = "Delete",
+                            tint = Outline.copy(alpha = 0.6f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }

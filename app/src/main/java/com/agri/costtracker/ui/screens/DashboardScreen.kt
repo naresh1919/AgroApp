@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.agri.costtracker.data.model.RecordCategory
@@ -27,6 +29,7 @@ import com.agri.costtracker.ui.components.AgriScreen
 import com.agri.costtracker.ui.localization.AppStrings
 import com.agri.costtracker.ui.theme.*
 import com.agri.costtracker.ui.viewmodel.AgriViewModel
+import com.agri.costtracker.ui.viewmodel.MonthlyExpenditure
 import java.util.Locale
 
 @Composable
@@ -40,7 +43,9 @@ fun DashboardScreen(
 ) {
     val metrics by viewModel.dashboardMetrics.collectAsState()
     val allRecords by viewModel.allRecords.collectAsState()
+    val season by viewModel.selectedSeason.collectAsState()
     val scrollState = rememberScrollState()
+    var showSeasonDropdown by remember { mutableStateOf(false) }
 
     val decimalFormatter = remember {
         java.text.NumberFormat.getNumberInstance(Locale.US).apply {
@@ -57,14 +62,73 @@ fun DashboardScreen(
             .padding(bottom = 90.dp)
     ) {
         // Editorial Header
-        Text(
-            text = "BUSINESS OPERATIONS",
-            style = MaterialTheme.typography.labelSmall.copy(
-                letterSpacing = 2.sp,
-                color = Outline,
-                fontWeight = FontWeight.Bold
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "BUSINESS OPERATIONS",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    letterSpacing = 2.sp,
+                    color = Outline,
+                    fontWeight = FontWeight.Bold
+                )
             )
-        )
+
+            // Season Selector Dropdown
+            Box {
+                Surface(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .clickable { showSeasonDropdown = true },
+                    shape = RoundedCornerShape(20.dp),
+                    color = SecondaryFixed
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "SEASON $season",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black,
+                                color = OnSecondaryFixed
+                            )
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "Select Season",
+                            tint = OnSecondaryFixed,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = showSeasonDropdown,
+                    onDismissRequest = { showSeasonDropdown = false }
+                ) {
+                    listOf("2023", "2024", "2025", "2026").forEach { yr ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "Season $yr",
+                                    fontWeight = if (yr == season) FontWeight.Black else FontWeight.Normal,
+                                    color = if (yr == season) Primary else OnSurface
+                                )
+                            },
+                            onClick = {
+                                viewModel.setSeason(yr)
+                                showSeasonDropdown = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -343,7 +407,12 @@ fun DashboardScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Seasonal Expenditure Flow Bar Chart
+        SeasonalExpenditureFlowChart(monthlyBreakdown = metrics.monthlyBreakdown)
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Service Rates Snapshot Cards
         Row(
@@ -553,40 +622,221 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Generate Full Business Statement Button
-        Button(
-            onClick = onGenerateFiscalReport,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .shadow(elevation = 3.dp, shape = RoundedCornerShape(14.dp)),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = PaddingValues()
+        // Dual Bottom Action Row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Box(
+            Button(
+                onClick = onGenerateFiscalReport,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Brush.horizontalGradient(listOf(Primary, PrimaryContainer)))
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.Center
+                    .weight(1.3f)
+                    .height(56.dp)
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(14.dp)),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Brush.horizontalGradient(listOf(Primary, PrimaryContainer)))
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = strings.generateFiscalReport,
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = OnPrimary
+                            )
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Report",
+                            tint = OnPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            OutlinedButton(
+                onClick = { onNavigate(AgriScreen.RATES) },
+                modifier = Modifier
+                    .weight(0.9f)
+                    .height(56.dp),
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Rates",
+                        tint = Primary,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Text(
-                        text = strings.generateFiscalReport,
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        text = strings.navRates,
+                        style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = OnPrimary
+                            color = Primary
                         )
                     )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Report",
-                        tint = OnPrimary
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SeasonalExpenditureFlowChart(
+    monthlyBreakdown: List<MonthlyExpenditure>,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column {
+                    Text(
+                        text = "Seasonal Expenditure Flow",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = OnSurface
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "MONTHLY ACTIVITY & HARVEST DISPATCH",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Outline,
+                            letterSpacing = 1.sp
+                        )
+                    )
+                }
+
+                // Legend
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(Primary)
+                        )
+                        Text("Spraying", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(Secondary)
+                        )
+                        Text("Cutting", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = OnSurfaceVariant)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            val defaultMonths = listOf("MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+            val maxCost = monthlyBreakdown.maxOfOrNull { it.totalCost }?.coerceAtLeast(1.0) ?: 1.0
+            val hasData = monthlyBreakdown.any { it.totalCost > 0 }
+            val sampleFractions = listOf(0.40f, 0.65f, 0.45f, 0.90f, 0.30f, 0.75f, 0.55f, 0.85f, 0.95f, 0.40f)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                defaultMonths.forEachIndexed { index, month ->
+                    val data = monthlyBreakdown.find { it.monthLabel == month }
+                    val fraction = if (hasData) {
+                        val cost = data?.totalCost ?: 0.0
+                        if (cost > 0) (cost / maxCost).toFloat().coerceIn(0.18f, 1f) else 0.08f
+                    } else {
+                        sampleFractions[index % sampleFractions.size]
+                    }
+
+                    val isSprayingHeavier = if (hasData && data != null && data.totalCost > 0) {
+                        data.sprayingCost >= data.harvestingCost
+                    } else {
+                        index % 2 == 0 || index == 3 || index == 7 || index == 8
+                    }
+
+                    val barColor = if (isSprayingHeavier) Primary else Secondary
+                    val secondaryColor = if (isSprayingHeavier) PrimaryContainer.copy(alpha = 0.8f) else SecondaryContainer
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 2.5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(fraction)
+                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(secondaryColor, barColor)
+                                    )
+                                )
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Month labels
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                defaultMonths.forEach { month ->
+                    Text(
+                        text = month,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Outline,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
                     )
                 }
             }

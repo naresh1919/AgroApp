@@ -42,6 +42,7 @@ fun AddFarmerDialog(
 
     var nameError by remember { mutableStateOf(false) }
     var mobileError by remember { mutableStateOf(false) }
+    var acresError by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
 
@@ -118,7 +119,7 @@ fun AddFarmerDialog(
                     value = mobile,
                     onValueChange = {
                         mobile = it
-                        if (it.isNotBlank()) mobileError = false
+                        if (it.filter(Char::isDigit).length >= 10) mobileError = false
                     },
                     label = { Text(strings.mobileNumber) },
                     placeholder = { Text("e.g. 9876543210") },
@@ -129,7 +130,7 @@ fun AddFarmerDialog(
                     isError = mobileError,
                     supportingText = {
                         if (mobileError) {
-                            Text(strings.mobileMandatory, color = MaterialTheme.colorScheme.error)
+                            Text("Enter a valid mobile number", color = MaterialTheme.colorScheme.error)
                         }
                     },
                     singleLine = true,
@@ -156,13 +157,20 @@ fun AddFarmerDialog(
                 // Total Farm Land (Acres) - Optional
                 OutlinedTextField(
                     value = acresInput,
-                    onValueChange = { acresInput = it },
+                    onValueChange = {
+                        acresInput = it
+                        if ((it.toDoubleOrNull() ?: 0.0) >= 0.0) acresError = false
+                    },
                     label = { Text(strings.totalFarmLand) },
                     placeholder = { Text("e.g. 25.0") },
                     leadingIcon = {
                         Icon(Icons.Default.Landscape, contentDescription = "Acres", tint = Outline)
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = acresError,
+                    supportingText = {
+                        if (acresError) Text("Land area cannot be negative", color = MaterialTheme.colorScheme.error)
+                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -188,11 +196,13 @@ fun AddFarmerDialog(
                 Button(
                     onClick = {
                         val validName = name.isNotBlank()
-                        val validMobile = mobile.isNotBlank()
+                        val validMobile = mobile.filter(Char::isDigit).length >= 10
+                        val validAcres = acresInput.isBlank() || (acresInput.toDoubleOrNull()?.let { it >= 0.0 } == true)
                         if (!validName) nameError = true
                         if (!validMobile) mobileError = true
+                        if (!validAcres) acresError = true
 
-                        if (validName && validMobile) {
+                        if (validName && validMobile && validAcres) {
                             val acres = acresInput.toDoubleOrNull() ?: 0.0
                             onAddFarmer(name, mobile, village, acres, notes)
                             onDismiss()

@@ -197,6 +197,48 @@ fun ServiceRatesScreen(
                         )
                     )
                 }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Quick steppers & Live preview
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val sprayVal = sprayingRateInput.toDoubleOrNull() ?: 0.0
+                    Text(
+                        text = "10 ${strings.acres} = ₹${String.format(Locale.US, "%,.0f", sprayVal * 10)}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FilledTonalButton(
+                            onClick = {
+                                val v = (sprayingRateInput.toDoubleOrNull() ?: 0.0) - 20.0
+                                sprayingRateInput = String.format(Locale.US, "%.2f", v.coerceAtLeast(0.0))
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text("-20", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        FilledTonalButton(
+                            onClick = {
+                                val v = (sprayingRateInput.toDoubleOrNull() ?: 0.0) + 20.0
+                                sprayingRateInput = String.format(Locale.US, "%.2f", v)
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text("+20", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
 
@@ -313,6 +355,48 @@ fun ServiceRatesScreen(
                             color = OnSurfaceVariant
                         )
                     )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Quick steppers & Live preview
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val cuttingVal = cropCuttingRateInput.toDoubleOrNull() ?: 0.0
+                    Text(
+                        text = "10 ${strings.acres} = ₹${String.format(Locale.US, "%,.0f", cuttingVal * 10)}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Secondary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FilledTonalButton(
+                            onClick = {
+                                val v = (cropCuttingRateInput.toDoubleOrNull() ?: 0.0) - 50.0
+                                cropCuttingRateInput = String.format(Locale.US, "%.2f", v.coerceAtLeast(0.0))
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text("-50", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        FilledTonalButton(
+                            onClick = {
+                                val v = (cropCuttingRateInput.toDoubleOrNull() ?: 0.0) + 50.0
+                                cropCuttingRateInput = String.format(Locale.US, "%.2f", v)
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text("+50", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }

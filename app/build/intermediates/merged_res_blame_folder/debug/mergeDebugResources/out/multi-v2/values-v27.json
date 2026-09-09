@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.agri.costtracker.app-mergeDebugResources-63:/values-v27/values-v27.xml",
+            "map": [
+                {
+                    "source": "E:\\AgroApp\\app\\src\\main\\res\\values-v27\\themes.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "7",
+                        "endColumns": "12",
+                        "endOffsets": "404"
+                    }
+                }
+            ]
+        }
+    ]
+}

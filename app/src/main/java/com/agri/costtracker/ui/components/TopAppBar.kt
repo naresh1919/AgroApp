@@ -2,7 +2,6 @@ package com.agri.costtracker.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +32,7 @@ fun AgriTopAppBar(
     currentLanguage: AppLanguage,
     onLanguageSelected: (AppLanguage) -> Unit,
     onAddFarmerClick: () -> Unit = {},
+    onCloudSyncClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
     var showLanguageMenu by remember { mutableStateOf(false) }
@@ -52,7 +54,7 @@ fun AgriTopAppBar(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.weight(1f, fill = false)
+                modifier = Modifier.weight(1f)
             ) {
                 Box(
                     modifier = Modifier
@@ -91,39 +93,19 @@ fun AgriTopAppBar(
                 }
             }
 
-            // Top Right Actions: Language Selector Chip, "+ Add Farmer" button, and Settings
+            // Compact icon actions keep this bar usable on narrow phones and in every language.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 // Language Selection Menu
                 Box {
-                    Surface(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable { showLanguageMenu = true },
-                        shape = RoundedCornerShape(16.dp),
-                        color = PrimaryContainer.copy(alpha = 0.15f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Primary.copy(alpha = 0.35f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "🌐",
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = currentLanguage.nativeName,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
-                                    color = Primary
-                                )
-                            )
-                        }
+                    IconButton(onClick = { showLanguageMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = "Select language: ${currentLanguage.displayName}",
+                            tint = Primary
+                        )
                     }
 
                     DropdownMenu(
@@ -140,7 +122,7 @@ fun AgriTopAppBar(
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
                         HorizontalDivider()
-                        AppLanguage.values().forEach { lang ->
+                        AppLanguage.entries.forEach { lang ->
                             DropdownMenuItem(
                                 text = {
                                     Row(
@@ -170,42 +152,29 @@ fun AgriTopAppBar(
                     }
                 }
 
-                // Add Farmer Button
-                Button(
-                    onClick = onAddFarmerClick,
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Primary
-                    ),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    modifier = Modifier.height(34.dp)
-                ) {
+                IconButton(onClick = onAddFarmerClick) {
                     Icon(
                         imageVector = Icons.Default.PersonAdd,
                         contentDescription = "Add Farmer",
-                        tint = Color.White,
-                        modifier = Modifier.size(15.dp)
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = strings.addFarmer,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color.White
-                        )
+                        tint = Primary
                     )
                 }
 
-                IconButton(
-                    onClick = onSettingsClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
+                IconButton(onClick = onCloudSyncClick) {
+                    Text(
+                        text = "↻",
+                        color = Primary,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { contentDescription = "Cloud sync" }
+                    )
+                }
+
+                IconButton(onClick = onSettingsClick) {
                     Icon(
                         imageVector = Icons.Outlined.Settings,
                         contentDescription = "Settings",
-                        tint = Color(0xFF1B6D24),
-                        modifier = Modifier.size(18.dp)
+                        tint = Color(0xFF1B6D24)
                     )
                 }
             }

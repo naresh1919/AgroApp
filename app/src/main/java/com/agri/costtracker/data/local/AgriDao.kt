@@ -31,6 +31,19 @@ interface AgriDao {
     @Delete
     suspend fun deleteFarmer(farmer: Farmer)
 
+    @Query("DELETE FROM activity_records WHERE farmerId = :farmerId")
+    suspend fun deleteRecordsByFarmerId(farmerId: Long)
+
+    @Query("DELETE FROM payment_records WHERE farmerId = :farmerId")
+    suspend fun deletePaymentsByFarmerId(farmerId: Long)
+
+    @Transaction
+    suspend fun deleteFarmerWithRelatedData(farmer: Farmer) {
+        deletePaymentsByFarmerId(farmer.id)
+        deleteRecordsByFarmerId(farmer.id)
+        deleteFarmer(farmer)
+    }
+
     // Business / Operator Profile
     @Query("SELECT * FROM farmer_profile WHERE id = 1")
     fun getFarmerProfile(): Flow<FarmerProfile?>
@@ -67,6 +80,15 @@ interface AgriDao {
     @Delete
     suspend fun deleteRecord(record: ActivityRecord)
 
+    @Query("DELETE FROM payment_records WHERE recordId = :recordId")
+    suspend fun deletePaymentsByRecordId(recordId: Long)
+
+    @Transaction
+    suspend fun deleteRecordWithPayments(record: ActivityRecord) {
+        deletePaymentsByRecordId(record.id)
+        deleteRecord(record)
+    }
+
     @Query("DELETE FROM activity_records")
     suspend fun clearAllRecords()
 
@@ -88,4 +110,20 @@ interface AgriDao {
 
     @Delete
     suspend fun deletePayment(payment: PaymentRecord)
+
+    // Snapshot queries for Cloud Sync & Backup
+    @Query("SELECT * FROM farmers")
+    suspend fun getAllFarmersSync(): List<Farmer>
+
+    @Query("SELECT * FROM activity_records")
+    suspend fun getAllRecordsSync(): List<ActivityRecord>
+
+    @Query("SELECT * FROM payment_records")
+    suspend fun getAllPaymentsSync(): List<PaymentRecord>
+
+    @Query("SELECT * FROM service_rates WHERE id = 1")
+    suspend fun getRatesSync(): ServiceRates?
+
+    @Query("SELECT * FROM farmer_profile WHERE id = 1")
+    suspend fun getProfileSync(): FarmerProfile?
 }

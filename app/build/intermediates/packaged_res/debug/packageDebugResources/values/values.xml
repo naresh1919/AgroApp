@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">The Modern Agronomist</string>
+    <string name="default_web_client_id" translatable="false">100000000000-abcdef0123456789abcdef.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">100000000000</string>
+    <string name="google_api_key" translatable="false">AIzaSyDummyApiKeyForTemplateSetup12345</string>
+    <string name="google_app_id" translatable="false">1:100000000000:android:abcdef0123456789abcdef</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDummyApiKeyForTemplateSetup12345</string>
+    <string name="google_storage_bucket" translatable="false">agri-cost-tracker-app.appspot.com</string>
+    <string name="project_id" translatable="false">agri-cost-tracker-app</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_history">History</string>
     <string name="title_land">Land</string>
@@ -9,6 +16,5 @@
         <item name="android:statusBarColor">#F9F9F9</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">#F9F9F9</item>
-        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>

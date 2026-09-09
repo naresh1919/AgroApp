@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 
 class AgriRepository(private val dao: AgriDao) {
 
+    val agriDao: AgriDao = dao
+
     // Farmers
     val allFarmersFlow: Flow<List<Farmer>> = dao.getAllFarmers()
 
@@ -20,7 +22,7 @@ class AgriRepository(private val dao: AgriDao) {
 
     suspend fun updateFarmer(farmer: Farmer) = dao.updateFarmer(farmer)
 
-    suspend fun deleteFarmer(farmer: Farmer) = dao.deleteFarmer(farmer)
+    suspend fun deleteFarmer(farmer: Farmer) = dao.deleteFarmerWithRelatedData(farmer)
 
     // Business Profile & Rates
     val profileFlow: Flow<FarmerProfile?> = dao.getFarmerProfile()
@@ -52,7 +54,7 @@ class AgriRepository(private val dao: AgriDao) {
     }
 
     suspend fun deleteRecord(record: ActivityRecord) {
-        dao.deleteRecord(record)
+        dao.deleteRecordWithPayments(record)
     }
 
     // Individual Payment Records / Installments

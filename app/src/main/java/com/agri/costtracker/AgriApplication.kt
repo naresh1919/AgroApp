@@ -13,4 +13,5 @@ class AgriApplication : Application() {
 
     val database by lazy { AgriDatabase.getDatabase(this, applicationScope) }
     val repository by lazy { AgriRepository(database.agriDao()) }
+    val syncManager by lazy { com.agri.costtracker.data.sync.FirestoreSyncManager(this) }
 }

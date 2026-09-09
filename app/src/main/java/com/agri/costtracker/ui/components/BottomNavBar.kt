@@ -62,7 +62,7 @@ fun AgriBottomNavBar(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AgriScreen.values().forEach { screen ->
+            AgriScreen.entries.forEach { screen ->
                 val selected = currentScreen == screen
                 val containerColor = if (selected) Color(0xFFDCFCE7) else Color.Transparent
                 val contentColor = if (selected) Primary else Color(0xFF78716C)

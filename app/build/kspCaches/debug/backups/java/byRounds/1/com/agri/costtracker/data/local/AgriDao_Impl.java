@@ -1,12 +1,14 @@
 package com.agri.costtracker.data.local;
 
 import android.database.Cursor;
+import android.os.CancellationSignal;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.CoroutinesRoom;
 import androidx.room.EntityDeletionOrUpdateAdapter;
 import androidx.room.EntityInsertionAdapter;
 import androidx.room.RoomDatabase;
+import androidx.room.RoomDatabaseKt;
 import androidx.room.RoomSQLiteQuery;
 import androidx.room.SharedSQLiteStatement;
 import androidx.room.util.CursorUtil;
@@ -58,6 +60,12 @@ public final class AgriDao_Impl implements AgriDao {
   private final EntityDeletionOrUpdateAdapter<PaymentRecord> __deletionAdapterOfPaymentRecord;
 
   private final EntityDeletionOrUpdateAdapter<Farmer> __updateAdapterOfFarmer;
+
+  private final SharedSQLiteStatement __preparedStmtOfDeleteRecordsByFarmerId;
+
+  private final SharedSQLiteStatement __preparedStmtOfDeletePaymentsByFarmerId;
+
+  private final SharedSQLiteStatement __preparedStmtOfDeletePaymentsByRecordId;
 
   private final SharedSQLiteStatement __preparedStmtOfClearAllRecords;
 
@@ -226,6 +234,30 @@ public final class AgriDao_Impl implements AgriDao {
         statement.bindString(6, entity.getNotes());
         statement.bindLong(7, entity.getCreatedAt());
         statement.bindLong(8, entity.getId());
+      }
+    };
+    this.__preparedStmtOfDeleteRecordsByFarmerId = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "DELETE FROM activity_records WHERE farmerId = ?";
+        return _query;
+      }
+    };
+    this.__preparedStmtOfDeletePaymentsByFarmerId = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "DELETE FROM payment_records WHERE farmerId = ?";
+        return _query;
+      }
+    };
+    this.__preparedStmtOfDeletePaymentsByRecordId = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "DELETE FROM payment_records WHERE recordId = ?";
+        return _query;
       }
     };
     this.__preparedStmtOfClearAllRecords = new SharedSQLiteStatement(__db) {
@@ -458,6 +490,96 @@ public final class AgriDao_Impl implements AgriDao {
           return Unit.INSTANCE;
         } finally {
           __db.endTransaction();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object deleteFarmerWithRelatedData(final Farmer farmer,
+      final Continuation<? super Unit> $completion) {
+    return RoomDatabaseKt.withTransaction(__db, (__cont) -> AgriDao.DefaultImpls.deleteFarmerWithRelatedData(AgriDao_Impl.this, farmer, __cont), $completion);
+  }
+
+  @Override
+  public Object deleteRecordWithPayments(final ActivityRecord record,
+      final Continuation<? super Unit> $completion) {
+    return RoomDatabaseKt.withTransaction(__db, (__cont) -> AgriDao.DefaultImpls.deleteRecordWithPayments(AgriDao_Impl.this, record, __cont), $completion);
+  }
+
+  @Override
+  public Object deleteRecordsByFarmerId(final long farmerId,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfDeleteRecordsByFarmerId.acquire();
+        int _argIndex = 1;
+        _stmt.bindLong(_argIndex, farmerId);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfDeleteRecordsByFarmerId.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object deletePaymentsByFarmerId(final long farmerId,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfDeletePaymentsByFarmerId.acquire();
+        int _argIndex = 1;
+        _stmt.bindLong(_argIndex, farmerId);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfDeletePaymentsByFarmerId.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object deletePaymentsByRecordId(final long recordId,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfDeletePaymentsByRecordId.acquire();
+        int _argIndex = 1;
+        _stmt.bindLong(_argIndex, recordId);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfDeletePaymentsByRecordId.release(_stmt);
         }
       }
     }, $completion);
@@ -1181,6 +1303,274 @@ public final class AgriDao_Impl implements AgriDao {
         _statement.release();
       }
     });
+  }
+
+  @Override
+  public Object getAllFarmersSync(final Continuation<? super List<Farmer>> $completion) {
+    final String _sql = "SELECT * FROM farmers";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<Farmer>>() {
+      @Override
+      @NonNull
+      public List<Farmer> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfName = CursorUtil.getColumnIndexOrThrow(_cursor, "name");
+          final int _cursorIndexOfMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "mobile");
+          final int _cursorIndexOfVillage = CursorUtil.getColumnIndexOrThrow(_cursor, "village");
+          final int _cursorIndexOfTotalAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "totalAcres");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfCreatedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "createdAt");
+          final List<Farmer> _result = new ArrayList<Farmer>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final Farmer _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final String _tmpName;
+            _tmpName = _cursor.getString(_cursorIndexOfName);
+            final String _tmpMobile;
+            _tmpMobile = _cursor.getString(_cursorIndexOfMobile);
+            final String _tmpVillage;
+            _tmpVillage = _cursor.getString(_cursorIndexOfVillage);
+            final double _tmpTotalAcres;
+            _tmpTotalAcres = _cursor.getDouble(_cursorIndexOfTotalAcres);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpCreatedAt;
+            _tmpCreatedAt = _cursor.getLong(_cursorIndexOfCreatedAt);
+            _item = new Farmer(_tmpId,_tmpName,_tmpMobile,_tmpVillage,_tmpTotalAcres,_tmpNotes,_tmpCreatedAt);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getAllRecordsSync(final Continuation<? super List<ActivityRecord>> $completion) {
+    final String _sql = "SELECT * FROM activity_records";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<ActivityRecord>>() {
+      @Override
+      @NonNull
+      public List<ActivityRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfFarmerMobile = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerMobile");
+          final int _cursorIndexOfTitle = CursorUtil.getColumnIndexOrThrow(_cursor, "title");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfLocation = CursorUtil.getColumnIndexOrThrow(_cursor, "location");
+          final int _cursorIndexOfCost = CursorUtil.getColumnIndexOrThrow(_cursor, "cost");
+          final int _cursorIndexOfPaidAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "paidAmount");
+          final int _cursorIndexOfLastPaymentDate = CursorUtil.getColumnIndexOrThrow(_cursor, "lastPaymentDate");
+          final int _cursorIndexOfAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "acres");
+          final int _cursorIndexOfRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "ratePerAcre");
+          final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
+          final int _cursorIndexOfCategory = CursorUtil.getColumnIndexOrThrow(_cursor, "category");
+          final int _cursorIndexOfSeason = CursorUtil.getColumnIndexOrThrow(_cursor, "season");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<ActivityRecord> _result = new ArrayList<ActivityRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ActivityRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final String _tmpFarmerMobile;
+            _tmpFarmerMobile = _cursor.getString(_cursorIndexOfFarmerMobile);
+            final String _tmpTitle;
+            _tmpTitle = _cursor.getString(_cursorIndexOfTitle);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpLocation;
+            _tmpLocation = _cursor.getString(_cursorIndexOfLocation);
+            final double _tmpCost;
+            _tmpCost = _cursor.getDouble(_cursorIndexOfCost);
+            final double _tmpPaidAmount;
+            _tmpPaidAmount = _cursor.getDouble(_cursorIndexOfPaidAmount);
+            final String _tmpLastPaymentDate;
+            _tmpLastPaymentDate = _cursor.getString(_cursorIndexOfLastPaymentDate);
+            final double _tmpAcres;
+            _tmpAcres = _cursor.getDouble(_cursorIndexOfAcres);
+            final double _tmpRatePerAcre;
+            _tmpRatePerAcre = _cursor.getDouble(_cursorIndexOfRatePerAcre);
+            final RecordStatus _tmpStatus;
+            _tmpStatus = __RecordStatus_stringToEnum(_cursor.getString(_cursorIndexOfStatus));
+            final RecordCategory _tmpCategory;
+            _tmpCategory = __RecordCategory_stringToEnum(_cursor.getString(_cursorIndexOfCategory));
+            final String _tmpSeason;
+            _tmpSeason = _cursor.getString(_cursorIndexOfSeason);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new ActivityRecord(_tmpId,_tmpFarmerId,_tmpFarmerName,_tmpFarmerMobile,_tmpTitle,_tmpDate,_tmpLocation,_tmpCost,_tmpPaidAmount,_tmpLastPaymentDate,_tmpAcres,_tmpRatePerAcre,_tmpStatus,_tmpCategory,_tmpSeason,_tmpNotes,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getAllPaymentsSync(final Continuation<? super List<PaymentRecord>> $completion) {
+    final String _sql = "SELECT * FROM payment_records";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<PaymentRecord>>() {
+      @Override
+      @NonNull
+      public List<PaymentRecord> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfRecordId = CursorUtil.getColumnIndexOrThrow(_cursor, "recordId");
+          final int _cursorIndexOfFarmerId = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerId");
+          final int _cursorIndexOfFarmerName = CursorUtil.getColumnIndexOrThrow(_cursor, "farmerName");
+          final int _cursorIndexOfAmount = CursorUtil.getColumnIndexOrThrow(_cursor, "amount");
+          final int _cursorIndexOfDate = CursorUtil.getColumnIndexOrThrow(_cursor, "date");
+          final int _cursorIndexOfPaymentMode = CursorUtil.getColumnIndexOrThrow(_cursor, "paymentMode");
+          final int _cursorIndexOfNotes = CursorUtil.getColumnIndexOrThrow(_cursor, "notes");
+          final int _cursorIndexOfTimestamp = CursorUtil.getColumnIndexOrThrow(_cursor, "timestamp");
+          final List<PaymentRecord> _result = new ArrayList<PaymentRecord>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final PaymentRecord _item;
+            final long _tmpId;
+            _tmpId = _cursor.getLong(_cursorIndexOfId);
+            final long _tmpRecordId;
+            _tmpRecordId = _cursor.getLong(_cursorIndexOfRecordId);
+            final long _tmpFarmerId;
+            _tmpFarmerId = _cursor.getLong(_cursorIndexOfFarmerId);
+            final String _tmpFarmerName;
+            _tmpFarmerName = _cursor.getString(_cursorIndexOfFarmerName);
+            final double _tmpAmount;
+            _tmpAmount = _cursor.getDouble(_cursorIndexOfAmount);
+            final String _tmpDate;
+            _tmpDate = _cursor.getString(_cursorIndexOfDate);
+            final String _tmpPaymentMode;
+            _tmpPaymentMode = _cursor.getString(_cursorIndexOfPaymentMode);
+            final String _tmpNotes;
+            _tmpNotes = _cursor.getString(_cursorIndexOfNotes);
+            final long _tmpTimestamp;
+            _tmpTimestamp = _cursor.getLong(_cursorIndexOfTimestamp);
+            _item = new PaymentRecord(_tmpId,_tmpRecordId,_tmpFarmerId,_tmpFarmerName,_tmpAmount,_tmpDate,_tmpPaymentMode,_tmpNotes,_tmpTimestamp);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getRatesSync(final Continuation<? super ServiceRates> $completion) {
+    final String _sql = "SELECT * FROM service_rates WHERE id = 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<ServiceRates>() {
+      @Override
+      @Nullable
+      public ServiceRates call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfSprayingRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "sprayingRatePerAcre");
+          final int _cursorIndexOfCropCuttingRatePerAcre = CursorUtil.getColumnIndexOrThrow(_cursor, "cropCuttingRatePerAcre");
+          final int _cursorIndexOfGlobalTrendPercent = CursorUtil.getColumnIndexOrThrow(_cursor, "globalTrendPercent");
+          final int _cursorIndexOfLastUpdated = CursorUtil.getColumnIndexOrThrow(_cursor, "lastUpdated");
+          final ServiceRates _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final double _tmpSprayingRatePerAcre;
+            _tmpSprayingRatePerAcre = _cursor.getDouble(_cursorIndexOfSprayingRatePerAcre);
+            final double _tmpCropCuttingRatePerAcre;
+            _tmpCropCuttingRatePerAcre = _cursor.getDouble(_cursorIndexOfCropCuttingRatePerAcre);
+            final double _tmpGlobalTrendPercent;
+            _tmpGlobalTrendPercent = _cursor.getDouble(_cursorIndexOfGlobalTrendPercent);
+            final long _tmpLastUpdated;
+            _tmpLastUpdated = _cursor.getLong(_cursorIndexOfLastUpdated);
+            _result = new ServiceRates(_tmpId,_tmpSprayingRatePerAcre,_tmpCropCuttingRatePerAcre,_tmpGlobalTrendPercent,_tmpLastUpdated);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getProfileSync(final Continuation<? super FarmerProfile> $completion) {
+    final String _sql = "SELECT * FROM farmer_profile WHERE id = 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<FarmerProfile>() {
+      @Override
+      @Nullable
+      public FarmerProfile call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfFullName = CursorUtil.getColumnIndexOrThrow(_cursor, "fullName");
+          final int _cursorIndexOfTotalOwnedAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "totalOwnedAcres");
+          final int _cursorIndexOfCultivatedAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "cultivatedAcres");
+          final int _cursorIndexOfFallowAcres = CursorUtil.getColumnIndexOrThrow(_cursor, "fallowAcres");
+          final int _cursorIndexOfSector = CursorUtil.getColumnIndexOrThrow(_cursor, "sector");
+          final int _cursorIndexOfRegion = CursorUtil.getColumnIndexOrThrow(_cursor, "region");
+          final int _cursorIndexOfAvatarUrl = CursorUtil.getColumnIndexOrThrow(_cursor, "avatarUrl");
+          final FarmerProfile _result;
+          if (_cursor.moveToFirst()) {
+            final int _tmpId;
+            _tmpId = _cursor.getInt(_cursorIndexOfId);
+            final String _tmpFullName;
+            _tmpFullName = _cursor.getString(_cursorIndexOfFullName);
+            final double _tmpTotalOwnedAcres;
+            _tmpTotalOwnedAcres = _cursor.getDouble(_cursorIndexOfTotalOwnedAcres);
+            final double _tmpCultivatedAcres;
+            _tmpCultivatedAcres = _cursor.getDouble(_cursorIndexOfCultivatedAcres);
+            final double _tmpFallowAcres;
+            _tmpFallowAcres = _cursor.getDouble(_cursorIndexOfFallowAcres);
+            final String _tmpSector;
+            _tmpSector = _cursor.getString(_cursorIndexOfSector);
+            final String _tmpRegion;
+            _tmpRegion = _cursor.getString(_cursorIndexOfRegion);
+            final String _tmpAvatarUrl;
+            _tmpAvatarUrl = _cursor.getString(_cursorIndexOfAvatarUrl);
+            _result = new FarmerProfile(_tmpId,_tmpFullName,_tmpTotalOwnedAcres,_tmpCultivatedAcres,_tmpFallowAcres,_tmpSector,_tmpRegion,_tmpAvatarUrl);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
   }
 
   @NonNull

@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
@@ -46,6 +47,28 @@ fun FarmersDirectoryScreen(
     val allPayments by viewModel.allPayments.collectAsState()
     val selectedFarmerForStatement by viewModel.selectedFarmerForStatement.collectAsState()
 
+    var searchQuery by remember { mutableStateOf("") }
+    var filterPendingOnly by remember { mutableStateOf(false) }
+    var farmerToDelete by remember { mutableStateOf<Farmer?>(null) }
+
+    val filteredFarmers = remember(farmers, allRecords, searchQuery, filterPendingOnly) {
+        farmers.filter { farmer ->
+            val matchesSearch = searchQuery.isBlank() ||
+                farmer.name.contains(searchQuery, ignoreCase = true) ||
+                farmer.mobile.contains(searchQuery, ignoreCase = true) ||
+                farmer.village.contains(searchQuery, ignoreCase = true)
+
+            val matchesPending = if (filterPendingOnly) {
+                val farmerRecords = allRecords.filter { it.farmerId == farmer.id }
+                val totalCost = farmerRecords.sumOf { it.cost }
+                val totalPaid = farmerRecords.sumOf { it.paidAmount }
+                (totalCost - totalPaid) > 0.0
+            } else true
+
+            matchesSearch && matchesPending
+        }
+    }
+
     if (selectedFarmerForStatement != null) {
         FarmerStatementDialog(
             farmer = selectedFarmerForStatement!!,
@@ -56,6 +79,24 @@ fun FarmersDirectoryScreen(
                 viewModel.recordPayment(record, amount, date, mode, notes)
             },
             onDismiss = { viewModel.selectFarmerForStatement(null) }
+        )
+    }
+
+    farmerToDelete?.let { farmer ->
+        AlertDialog(
+            onDismissRequest = { farmerToDelete = null },
+            title = { Text("Delete farmer?") },
+            text = { Text("This will permanently remove ${farmer.name}, all of their bookings, and payment history.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteFarmer(farmer)
+                        Toast.makeText(context, "${farmer.name} ${strings.delete}", Toast.LENGTH_SHORT).show()
+                        farmerToDelete = null
+                    }
+                ) { Text(strings.delete, color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { farmerToDelete = null }) { Text("Cancel") } }
         )
     }
 
@@ -232,18 +273,64 @@ fun FarmersDirectoryScreen(
             }
         }
 
-        // Section Title
+        // Search Bar & Filter Tabs
         item {
-            Text(
-                text = "${strings.farmersDirectoryTitle} (${farmers.size})",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = OnSurface
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search farmer, phone, village...") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Primary)
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
-            )
+
+                // Quick Filter Tabs: All vs Pending Dues
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val pendingCount = remember(farmers, allRecords) {
+                        farmers.count { f ->
+                            val r = allRecords.filter { it.farmerId == f.id }
+                            (r.sumOf { it.cost } - r.sumOf { it.paidAmount }) > 0
+                        }
+                    }
+
+                    FilterChip(
+                        selected = !filterPendingOnly,
+                        onClick = { filterPendingOnly = false },
+                        label = { Text("All Farmers (${farmers.size})", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = PrimaryContainer.copy(alpha = 0.25f),
+                            selectedLabelColor = Primary
+                        )
+                    )
+
+                    FilterChip(
+                        selected = filterPendingOnly,
+                        onClick = { filterPendingOnly = true },
+                        label = { Text("Pending Dues ($pendingCount)", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = SecondaryFixed,
+                            selectedLabelColor = OnSecondaryFixed
+                        )
+                    )
+                }
+            }
         }
 
-        if (farmers.isEmpty()) {
+        if (filteredFarmers.isEmpty()) {
             item {
                 Box(
                     modifier = Modifier
@@ -259,7 +346,10 @@ fun FarmersDirectoryScreen(
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(strings.noFarmersYet, color = OnSurfaceVariant)
+                        Text(
+                            text = if (searchQuery.isNotBlank()) "No farmers match '$searchQuery'" else strings.noFarmersYet,
+                            color = OnSurfaceVariant
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(onClick = onOpenAddFarmer) {
                             Text(strings.registerNewFarmer, fontWeight = FontWeight.Bold)
@@ -268,7 +358,7 @@ fun FarmersDirectoryScreen(
                 }
             }
         } else {
-            items(farmers, key = { it.id }) { farmer ->
+            items(filteredFarmers, key = { it.id }) { farmer ->
                 val farmerRecords = allRecords.filter { it.farmerId == farmer.id }
                 val farmerAcres = farmerRecords.sumOf { it.acres }
                 val farmerTotalCost = farmerRecords.sumOf { it.cost }
@@ -295,9 +385,20 @@ fun FarmersDirectoryScreen(
                             Toast.makeText(context, "Calling ${farmer.mobile}", Toast.LENGTH_SHORT).show()
                         }
                     },
+                    onWhatsAppFarmer = {
+                        val cleanNumber = farmer.mobile.filter { it.isDigit() }
+                        val phoneParam = if (cleanNumber.length == 10) "91$cleanNumber" else cleanNumber
+                        val message = "🌾 Agri Services Statement Update:\nFarmer: ${farmer.name}\nTotal Serviced: ${String.format(Locale.US, "%.1f", farmerAcres)} acres\nPending Balance Due: ₹${String.format(Locale.US, "%,.2f", farmerPending)}"
+                        val url = "https://api.whatsapp.com/send?phone=$phoneParam&text=${Uri.encode(message)}"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Cannot open WhatsApp for ${farmer.mobile}", Toast.LENGTH_SHORT).show()
+                        }
+                    },
                     onDeleteFarmer = {
-                        viewModel.deleteFarmer(farmer)
-                        Toast.makeText(context, "${farmer.name} ${strings.delete}", Toast.LENGTH_SHORT).show()
+                        farmerToDelete = farmer
                     }
                 )
             }
@@ -315,6 +416,7 @@ fun FarmerCardItem(
     strings: AppStrings,
     onViewStatement: () -> Unit,
     onCallFarmer: () -> Unit,
+    onWhatsAppFarmer: () -> Unit,
     onDeleteFarmer: () -> Unit
 ) {
     Card(
@@ -330,7 +432,7 @@ fun FarmerCardItem(
                 .fillMaxWidth()
                 .padding(18.dp)
         ) {
-            // Row 1: Name, Avatar, and Quick Call
+            // Row 1: Name, Avatar, and Quick Call / WhatsApp
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -387,10 +489,13 @@ fun FarmerCardItem(
                     }
                 }
 
-                // Call & Delete Icons
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                // Call, WhatsApp & Delete Icons
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     IconButton(onClick = onCallFarmer) {
                         Icon(Icons.Default.Phone, contentDescription = "Call", tint = Primary)
+                    }
+                    IconButton(onClick = onWhatsAppFarmer) {
+                        Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "WhatsApp", tint = Color(0xFF25D366))
                     }
                     IconButton(onClick = onDeleteFarmer) {
                         Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Outline.copy(alpha = 0.7f))

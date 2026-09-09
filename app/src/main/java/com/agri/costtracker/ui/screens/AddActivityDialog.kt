@@ -51,7 +51,8 @@ fun AddActivityDialog(
 ) {
     var selectedFarmer by remember { mutableStateOf(farmers.firstOrNull()) }
     var selectedCategory by remember { mutableStateOf(RecordCategory.SPRAYING) }
-    var acresInput by remember { mutableStateOf("10.0") }
+    val initialAcres = selectedFarmer?.totalAcres?.takeIf { it > 0 }?.let { String.format(Locale.US, "%.1f", it) } ?: "5.0"
+    var acresInput by remember { mutableStateOf(initialAcres) }
 
     // Default rate depends on selected category
     val defaultRate = when (selectedCategory) {
@@ -73,12 +74,12 @@ fun AddActivityDialog(
     var location by remember(selectedFarmer) {
         mutableStateOf(selectedFarmer?.village ?: "Main Agri Zone")
     }
-    var customTitle by remember(selectedCategory) {
+    var customTitle by remember(selectedCategory, strings) {
         mutableStateOf(
             when (selectedCategory) {
-                RecordCategory.SPRAYING -> "Drone Spraying Service"
-                RecordCategory.HARVESTING -> "Cutting Machine Harvesting"
-                else -> "Custom Agri Rental"
+                RecordCategory.SPRAYING -> strings.droneSpraying
+                RecordCategory.HARVESTING -> strings.cuttingMachine
+                else -> strings.newBooking
             }
         )
     }
@@ -86,6 +87,7 @@ fun AddActivityDialog(
 
     var expandedFarmerDropdown by remember { mutableStateOf(false) }
     var farmerError by remember { mutableStateOf(false) }
+    var bookingError by remember { mutableStateOf<String?>(null) }
 
     val acres = acresInput.toDoubleOrNull() ?: 0.0
     val rate = rateInput.toDoubleOrNull() ?: 0.0
@@ -198,6 +200,9 @@ fun AddActivityDialog(
                                     onClick = {
                                         selectedFarmer = farmer
                                         location = farmer.village.ifEmpty { "Main Agri Zone" }
+                                        if (farmer.totalAcres > 0) {
+                                            acresInput = String.format(Locale.US, "%.1f", farmer.totalAcres)
+                                        }
                                         farmerError = false
                                         expandedFarmerDropdown = false
                                     }
@@ -383,6 +388,58 @@ fun AddActivityDialog(
                     shape = RoundedCornerShape(10.dp)
                 )
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Date selection with quick presets (Today, Yesterday)
+                OutlinedTextField(
+                    value = date,
+                    onValueChange = { date = it },
+                    label = { Text(strings.paymentDateLabel) },
+                    leadingIcon = {
+                        Icon(Icons.Default.CalendarToday, contentDescription = "Date", tint = Outline)
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    val yesterdayFormatted = remember {
+                        val cal = Calendar.getInstance().apply { add(Calendar.DATE, -1) }
+                        SimpleDateFormat("MMMM dd, yyyy", Locale.US).format(cal.time)
+                    }
+                    FilterChip(
+                        selected = date == todayFormatted,
+                        onClick = { date = todayFormatted },
+                        label = { Text("Today", fontSize = 11.sp) }
+                    )
+                    FilterChip(
+                        selected = date == yesterdayFormatted,
+                        onClick = { date = yesterdayFormatted },
+                        label = { Text("Yesterday", fontSize = 11.sp) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Notes / Remarks
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    label = { Text(strings.cropsNotes) },
+                    placeholder = { Text("e.g. Field #2, Nano urea spraying") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Info, contentDescription = "Notes", tint = Outline)
+                    },
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // Save Record Button
@@ -393,7 +450,14 @@ fun AddActivityDialog(
                             return@Button
                         }
                         val farmer = selectedFarmer!!
-                        if (acres > 0 && rate > 0) {
+                        bookingError = when {
+                            acres <= 0 -> "Enter an area greater than zero"
+                            rate <= 0 -> "Enter a rate greater than zero"
+                            advancePaid < 0 -> "Payment cannot be negative"
+                            advancePaid > calculatedTotal -> "Payment cannot exceed the total bill"
+                            else -> null
+                        }
+                        if (bookingError == null) {
                             onAddRecord(
                                 farmer.id,
                                 farmer.name,
@@ -431,6 +495,14 @@ fun AddActivityDialog(
                             )
                         )
                     }
+                }
+                if (bookingError != null) {
+                    Text(
+                        text = bookingError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
             }
         }

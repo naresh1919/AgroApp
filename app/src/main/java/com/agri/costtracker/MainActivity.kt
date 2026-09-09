@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: AgriViewModel by viewModels {
         val app = application as AgriApplication
-        AgriViewModelFactory(app.repository)
+        AgriViewModelFactory(app.repository, app.syncManager)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +46,7 @@ fun MainAppScaffold(viewModel: AgriViewModel) {
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAddFarmerDialog by remember { mutableStateOf(false) }
     var showAddBookingDialog by remember { mutableStateOf(false) }
+    var showCloudBackupDialog by remember { mutableStateOf(false) }
 
     val currentLanguage by viewModel.selectedLanguage.collectAsState()
     val strings = remember(currentLanguage) { getAppStrings(currentLanguage) }
@@ -107,6 +108,15 @@ fun MainAppScaffold(viewModel: AgriViewModel) {
         )
     }
 
+    // Firebase Cloud Sync Dialog
+    if (showCloudBackupDialog) {
+        com.agri.costtracker.ui.screens.CloudBackupDialog(
+            viewModel = viewModel,
+            strings = strings,
+            onDismiss = { showCloudBackupDialog = false }
+        )
+    }
+
     // Settings / App Info Dialog
     if (showSettingsDialog) {
         AlertDialog(
@@ -135,6 +145,7 @@ fun MainAppScaffold(viewModel: AgriViewModel) {
                     viewModel.setLanguage(lang)
                 },
                 onAddFarmerClick = { showAddFarmerDialog = true },
+                onCloudSyncClick = { showCloudBackupDialog = true },
                 onSettingsClick = { showSettingsDialog = true }
             )
         },

@@ -1,0 +1,7 @@
+E:\AgroApp\app\src\test\java\com\agri\costtracker\util\MainDispatcherRule.kt
+E:\AgroApp\app\src\test\java\com\agri\costtracker\ui\viewmodel\AgriViewModelTest.kt
+E:\AgroApp\app\src\test\java\com\agri\costtracker\data\local\AgriDatabaseSeedingTest.kt
+E:\AgroApp\app\src\test\java\com\agri\costtracker\data\local\FakeAgriDao.kt
+E:\AgroApp\app\src\test\java\com\agri\costtracker\data\model\ModelTest.kt
+E:\AgroApp\app\src\test\java\com\agri\costtracker\data\repository\AgriRepositoryTest.kt
+E:\AgroApp\app\src\test\java\com\agri\costtracker\ui\viewmodel\AgriViewModelFactoryTest.kt
